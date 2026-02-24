@@ -1,8 +1,8 @@
 import type { RunConfig, SessionResult } from '../types/session';
 
-// Local dev: set VITE_API_URL=http://localhost:8000 in web/.env.local
+// Local dev: Vite proxies /health, /agents, /run → http://localhost:8000 (see vite.config.ts)
 // Production: set VITE_API_URL to your backend Vercel URL in the Vercel dashboard
-const BASE = (import.meta as any).env?.VITE_API_URL ?? 'http://localhost:8000';
+const BASE = (import.meta as any).env?.VITE_API_URL ?? '';
 
 export async function getHealth(): Promise<boolean> {
   try {
