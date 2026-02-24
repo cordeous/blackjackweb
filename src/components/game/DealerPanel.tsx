@@ -26,34 +26,34 @@ export function DealerPanel({ upcard, fullHand, revealed }: Props) {
 
   return (
     <div
-      className="flex flex-col items-center gap-4 px-10 py-5"
+      className="flex flex-col items-center gap-2 md:gap-4 px-4 md:px-10 py-3 md:py-5"
       style={{ borderBottom: '1px solid #2A2A2A' }}
     >
-      <span className="text-[11px] font-medium tracking-[3px] text-[#848484]">DEALER</span>
+      <span className="text-[9px] md:text-[11px] font-medium tracking-[2px] md:tracking-[3px] text-[#848484]">DEALER</span>
 
-      <div className="flex gap-3 flex-wrap justify-center">
+      <div className="flex gap-2 md:gap-3 flex-wrap justify-center">
         {displayCards.map((card, i) => (
-          <CardDisplay key={`${card}-${i}`} card={card} animDelay={i * 80} />
+          <CardDisplay key={`${card}-${i}`} card={card} animDelay={i * 80} small />
         ))}
         {!revealed && (
-          <CardDisplay card="?♠" faceDown animDelay={80} />
+          <CardDisplay card="?♠" faceDown animDelay={80} small />
         )}
       </div>
 
       {revealed && val !== null ? (
-        <div className="flex items-center gap-2 text-sm">
+        <div className="flex items-center gap-1.5 md:gap-2 text-xs md:text-sm">
           <span className="text-[#848484]">Hand:</span>
           <span
             className="font-medium"
             style={{
               color:       bust ? '#f87171' : bj ? '#C9A962' : '#FFFFFF',
               fontFamily:  'Cormorant Garamond, serif',
-              fontSize:    '16px',
+              fontSize:    'inherit',
             }}
-          >{val}{bust ? ' — BUST' : bj ? ' — BLACKJACK' : ''}</span>
+          >{val}{bust ? ' — BUST' : bj ? ' — BJ' : ''}</span>
         </div>
       ) : (
-        <span className="text-sm text-[#848484]">
+        <span className="text-xs md:text-sm text-[#848484]">
           Showing: <span className="text-white">{upcard}</span>
         </span>
       )}

@@ -60,33 +60,35 @@ export function AgentPanel({ name, currentHand, bankroll, bet, isActive, activeS
     >
       {/* Agent name strip */}
       <div
-        className="flex items-center justify-between px-4 py-3 flex-shrink-0"
+        className="flex items-center justify-between px-2 md:px-4 py-2 md:py-3 flex-shrink-0"
         style={{ borderBottom: `1px solid ${isActive ? color + '40' : '#1A1A1A'}` }}
       >
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 md:gap-2 min-w-0">
           <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: color }} />
-          <span className="text-xs font-medium truncate" style={{ color: isActive ? color : '#FFFFFF' }}>{name}</span>
+          <span className="text-[10px] md:text-xs font-medium truncate" style={{ color: isActive ? color : '#FFFFFF' }}>
+            {name.split('(')[0]}
+          </span>
           {isActive && (
             <span
-              className="text-[9px] font-medium px-2 py-0.5"
+              className="text-[8px] md:text-[9px] font-medium px-1.5 py-0.5 hidden sm:inline"
               style={{ border: `1px solid ${color}66`, color }}
             >ACTIVE</span>
           )}
         </div>
-        <div className="flex flex-col items-end">
+        <div className="flex flex-col items-end flex-shrink-0">
           <span
-            className="text-sm font-medium"
+            className="text-xs md:text-sm font-medium"
             style={{ fontFamily: 'JetBrains Mono, monospace', color: '#C9A962' }}
           >${bankroll.toFixed(0)}</span>
           <span
-            className="text-[10px]"
+            className="text-[9px] md:text-[10px]"
             style={{ color: profit >= 0 ? '#C9A962' : '#f87171', fontFamily: 'JetBrains Mono, monospace' }}
           >{profit >= 0 ? '+' : ''}{profit.toFixed(0)}</span>
         </div>
       </div>
 
       {/* Cards */}
-      <div className="flex-1 flex flex-col items-center justify-center py-4 px-3 gap-3 min-h-[120px]">
+      <div className="flex-1 flex flex-col items-center justify-center py-2 md:py-4 px-2 md:px-3 gap-2 md:gap-3 min-h-[90px] md:min-h-[120px]">
         {currentHand.length > 0 ? (
           <HandDisplay
             cards={currentHand}
@@ -98,18 +100,18 @@ export function AgentPanel({ name, currentHand, bankroll, bet, isActive, activeS
             isBlackjack={bj}
           />
         ) : (
-          <span className="text-xs text-[#4A4A4A]">Waiting…</span>
+          <span className="text-[10px] md:text-xs text-[#4A4A4A]">Waiting…</span>
         )}
-        <div className="text-[10px] text-[#848484]">
+        <div className="text-[9px] md:text-[10px] text-[#848484]">
           Bet <span className="text-white" style={{ fontFamily: 'JetBrains Mono, monospace' }}>${bet}</span>
         </div>
       </div>
 
       {/* Decision area */}
-      <div className="px-4 pb-4 min-h-[72px] flex flex-col justify-end">
+      <div className="px-2 md:px-4 pb-2 md:pb-4 min-h-[56px] md:min-h-[72px] flex flex-col justify-end">
         {payout !== null ? (
           <div
-            className="flex items-center justify-center h-9 text-sm font-bold tracking-widest slide-up"
+            className="flex items-center justify-center h-8 md:h-9 text-[10px] md:text-sm font-bold tracking-widest slide-up"
             style={{
               background: payout > 0 ? 'rgba(22,163,74,0.15)' : payout < 0 ? 'rgba(220,38,38,0.15)' : 'rgba(217,119,6,0.15)',
               border:     `1px solid ${payout > 0 ? '#4ade80' : payout < 0 ? '#f87171' : '#fbbf24'}`,
@@ -119,12 +121,12 @@ export function AgentPanel({ name, currentHand, bankroll, bet, isActive, activeS
             {payout > 0 ? `+$${payout.toFixed(0)} WIN` : payout < 0 ? `-$${Math.abs(payout).toFixed(0)} LOSS` : 'PUSH'}
           </div>
         ) : activeStep ? (
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-1.5 md:gap-2">
             <div className="flex flex-wrap gap-1 justify-center">
               {activeStep.legal_actions.map(a => (
                 <span
                   key={a}
-                  className="text-[9px] px-2 py-1 font-bold uppercase tracking-widest"
+                  className="text-[8px] md:text-[9px] px-1.5 md:px-2 py-0.5 md:py-1 font-bold uppercase tracking-widest"
                   style={{
                     background: a === activeStep.action_taken ? (ACTION_BG[a] ?? 'rgba(255,255,255,0.1)') : 'transparent',
                     color:      a === activeStep.action_taken ? (ACTION_FG[a] ?? '#FFFFFF') : '#4A4A4A',
@@ -133,7 +135,7 @@ export function AgentPanel({ name, currentHand, bankroll, bet, isActive, activeS
                 >{a}</span>
               ))}
             </div>
-            <p className="text-[10px] text-[#848484] text-center leading-snug line-clamp-2">
+            <p className="text-[9px] md:text-[10px] text-[#848484] text-center leading-snug line-clamp-2">
               {activeStep.reason}
             </p>
           </div>
