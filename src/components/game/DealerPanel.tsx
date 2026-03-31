@@ -24,12 +24,22 @@ export function DealerPanel({ upcard, fullHand, revealed }: Props) {
   const bust = val !== null && val > 21;
   const bj   = revealed && fullHand.length === 2 && val === 21;
 
+  const handLabel = revealed && val !== null
+    ? `Dealer hand: ${fullHand.join(', ')} — ${val}${bust ? ' bust' : bj ? ' blackjack' : ''}`
+    : `Dealer showing: ${upcard}`;
+
   return (
-    <div
+    <section
       className="flex flex-col items-center gap-2 md:gap-4 px-4 md:px-10 py-3 md:py-5"
-      style={{ borderBottom: '1px solid #2A2A2A' }}
+      style={{ borderBottom: '1px solid var(--color-border)' }}
+      aria-label={handLabel}
+      aria-live="polite"
+      aria-atomic="true"
     >
-      <span className="text-[9px] md:text-[11px] font-medium tracking-[2px] md:tracking-[3px] text-[#848484]">DEALER</span>
+      <span
+        className="text-[9px] md:text-[11px] font-medium tracking-[2px] md:tracking-[3px]"
+        style={{ color: 'var(--color-text-secondary)' }}
+      >DEALER</span>
 
       <div className="flex gap-2 md:gap-3 flex-wrap justify-center">
         {displayCards.map((card, i) => (
@@ -41,22 +51,22 @@ export function DealerPanel({ upcard, fullHand, revealed }: Props) {
       </div>
 
       {revealed && val !== null ? (
-        <div className="flex items-center gap-1.5 md:gap-2 text-xs md:text-sm">
-          <span className="text-[#848484]">Hand:</span>
+        <div className="flex items-center gap-1.5 md:gap-2 text-xs md:text-sm" aria-hidden="true">
+          <span style={{ color: 'var(--color-text-secondary)' }}>Hand:</span>
           <span
             className="font-medium"
             style={{
-              color:       bust ? '#f87171' : bj ? '#C9A962' : '#FFFFFF',
+              color:       bust ? 'var(--color-loss-fg)' : bj ? 'var(--color-gold)' : 'var(--color-text-primary)',
               fontFamily:  'Cormorant Garamond, serif',
               fontSize:    'inherit',
             }}
           >{val}{bust ? ' — BUST' : bj ? ' — BJ' : ''}</span>
         </div>
       ) : (
-        <span className="text-xs md:text-sm text-[#848484]">
+        <span className="text-xs md:text-sm" style={{ color: 'var(--color-text-secondary)' }} aria-hidden="true">
           Showing: <span className="text-white">{upcard}</span>
         </span>
       )}
-    </div>
+    </section>
   );
 }

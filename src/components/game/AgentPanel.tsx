@@ -1,5 +1,5 @@
 import type { AgentRoundStep } from '../../types/session';
-import { AGENT_COLORS, ACTION_COLORS } from '../../types/session';
+import { AGENT_COLORS, ACTION_BG, ACTION_FG } from '../../types/session';
 import { HandDisplay } from './HandDisplay';
 
 interface Props {
@@ -29,60 +29,57 @@ function isBlackjack(cards: string[]): boolean {
   return cards.length === 2 && handValue(cards) === 21;
 }
 
-const ACTION_BG: Record<string, string> = {
-  hit:    'rgba(22,163,74,0.15)',
-  stand:  'rgba(220,38,38,0.15)',
-  double: 'rgba(217,119,6,0.15)',
-  split:  'rgba(124,58,237,0.15)',
-};
-const ACTION_FG: Record<string, string> = {
-  hit:    '#4ade80',
-  stand:  '#f87171',
-  double: '#fbbf24',
-  split:  '#c4b5fd',
-};
-
 export function AgentPanel({ name, currentHand, bankroll, bet, isActive, activeStep, payout, startingBankroll }: Props) {
-  const color  = AGENT_COLORS[name] ?? '#C9A962';
+  const color  = AGENT_COLORS[name] ?? 'var(--color-gold)';
   const val    = currentHand.length > 0 ? handValue(currentHand) : null;
   const bust   = val !== null && val > 21;
   const bj     = val !== null && isBlackjack(currentHand);
   const profit = bankroll - startingBankroll;
 
+  const payoutLabel = payout === null
+    ? undefined
+    : payout > 0
+      ? `Win: +$${payout.toFixed(0)}`
+      : payout < 0
+        ? `Loss: -$${Math.abs(payout).toFixed(0)}`
+        : 'Push';
+
   return (
-    <div
-      className="flex flex-col transition-all duration-300 overflow-hidden"
+    <article
+      className="flex flex-col overflow-hidden"
+      aria-label={`${name}${isActive ? ' — active' : ''}`}
       style={{
-        border:     `1px solid ${isActive ? color : '#2A2A2A'}`,
-        background: isActive ? `${color}08` : '#0A0A0A',
-        boxShadow:  isActive ? `inset 0 0 0 1px ${color}44` : 'none',
+        // Active: thick full-color border, brighter background
+        // Inactive: dimmed down so the active one reads as focal point
+        border:     isActive ? `2px solid ${color}` : '1px solid var(--color-border)',
+        background: isActive ? `${color}12` : 'var(--color-page)',
+        opacity:    isActive ? 1 : 0.72,
+        transition: 'opacity 0.25s ease, border-color 0.25s ease, background 0.25s ease',
+        boxShadow:  isActive ? `0 0 0 1px ${color}55, inset 0 0 24px ${color}0a` : 'none',
       }}
     >
       {/* Agent name strip */}
       <div
         className="flex items-center justify-between px-2 md:px-4 py-2 md:py-3 flex-shrink-0"
-        style={{ borderBottom: `1px solid ${isActive ? color + '40' : '#1A1A1A'}` }}
+        style={{ borderBottom: `1px solid ${isActive ? color + '50' : 'var(--color-border-sub)'}` }}
       >
         <div className="flex items-center gap-1.5 md:gap-2 min-w-0">
-          <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: color }} />
-          <span className="text-[10px] md:text-xs font-medium truncate" style={{ color: isActive ? color : '#FFFFFF' }}>
-            {name.split('(')[0]}
+          <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: color }} aria-hidden="true" />
+          <span
+            className="text-[10px] md:text-xs font-semibold truncate"
+            style={{ color: isActive ? color : 'var(--color-text-primary)' }}
+          >
+            {name}
           </span>
-          {isActive && (
-            <span
-              className="text-[8px] md:text-[9px] font-medium px-1.5 py-0.5 hidden sm:inline"
-              style={{ border: `1px solid ${color}66`, color }}
-            >ACTIVE</span>
-          )}
         </div>
         <div className="flex flex-col items-end flex-shrink-0">
           <span
             className="text-xs md:text-sm font-medium"
-            style={{ fontFamily: 'JetBrains Mono, monospace', color: '#C9A962' }}
+            style={{ fontFamily: 'JetBrains Mono, monospace', color: 'var(--color-gold)' }}
           >${bankroll.toFixed(0)}</span>
           <span
             className="text-[9px] md:text-[10px]"
-            style={{ color: profit >= 0 ? '#C9A962' : '#f87171', fontFamily: 'JetBrains Mono, monospace' }}
+            style={{ color: profit >= 0 ? 'var(--color-gold)' : 'var(--color-loss-fg)', fontFamily: 'JetBrains Mono, monospace' }}
           >{profit >= 0 ? '+' : ''}{profit.toFixed(0)}</span>
         </div>
       </div>
@@ -100,54 +97,70 @@ export function AgentPanel({ name, currentHand, bankroll, bet, isActive, activeS
             isBlackjack={bj}
           />
         ) : (
-          <span className="text-[10px] md:text-xs text-[#4A4A4A]">Waiting…</span>
+          <span className="text-[10px] md:text-xs" style={{ color: 'var(--color-text-muted)' }}>Waiting…</span>
         )}
-        <div className="text-[9px] md:text-[10px] text-[#848484]">
+        <div className="text-[9px] md:text-[10px]" style={{ color: 'var(--color-text-secondary)' }}>
           Bet <span className="text-white" style={{ fontFamily: 'JetBrains Mono, monospace' }}>${bet}</span>
         </div>
       </div>
 
       {/* Decision area */}
-      <div className="px-2 md:px-4 pb-2 md:pb-4 min-h-[56px] md:min-h-[72px] flex flex-col justify-end">
+      <div
+        className="px-2 md:px-4 pb-2 md:pb-4 min-h-[64px] md:min-h-[80px] flex flex-col justify-end gap-1.5"
+        aria-live="polite"
+        aria-atomic="true"
+        aria-label={payoutLabel ?? (activeStep ? `${activeStep.agent_name} chose ${activeStep.action_taken}` : undefined)}
+      >
         {payout !== null ? (
           <div
-            className="flex items-center justify-center h-8 md:h-9 text-[10px] md:text-sm font-bold tracking-widest slide-up"
+            className="flex items-center justify-center h-9 md:h-10 text-xs md:text-sm font-bold tracking-widest slide-up"
             style={{
-              background: payout > 0 ? 'rgba(22,163,74,0.15)' : payout < 0 ? 'rgba(220,38,38,0.15)' : 'rgba(217,119,6,0.15)',
-              border:     `1px solid ${payout > 0 ? '#4ade80' : payout < 0 ? '#f87171' : '#fbbf24'}`,
-              color:      payout > 0 ? '#4ade80'  : payout < 0 ? '#f87171'  : '#fbbf24',
+              background: payout > 0 ? 'var(--color-win-bg)' : payout < 0 ? 'var(--color-loss-bg)' : 'var(--color-push-bg)',
+              border:     `1px solid ${payout > 0 ? 'var(--color-win-fg)' : payout < 0 ? 'var(--color-loss-fg)' : 'var(--color-push-fg)'}`,
+              color:      payout > 0 ? 'var(--color-win-fg)' : payout < 0 ? 'var(--color-loss-fg)' : 'var(--color-push-fg)',
             }}
           >
             {payout > 0 ? `+$${payout.toFixed(0)} WIN` : payout < 0 ? `-$${Math.abs(payout).toFixed(0)} LOSS` : 'PUSH'}
           </div>
         ) : activeStep ? (
-          <div className="flex flex-col gap-1.5 md:gap-2">
+          <>
+            {/* Large action badge — the primary signal of what the agent is doing */}
+            <div className="flex justify-center">
+              <span
+                className="text-xs md:text-sm font-bold uppercase tracking-widest px-3 py-1 slide-up"
+                style={{
+                  background: ACTION_BG[activeStep.action_taken] ?? 'rgba(255,255,255,0.08)',
+                  color:      ACTION_FG[activeStep.action_taken] ?? 'var(--color-text-primary)',
+                  border:     `1px solid ${ACTION_FG[activeStep.action_taken] ?? 'var(--color-border)'}`,
+                }}
+              >
+                {activeStep.action_taken}
+              </span>
+            </div>
+            {/* Ghost options row — shows legal alternatives at a smaller size */}
             <div className="flex flex-wrap gap-1 justify-center">
-              {activeStep.legal_actions.map(a => (
+              {activeStep.legal_actions.filter(a => a !== activeStep.action_taken).map(a => (
                 <span
                   key={a}
-                  className="text-[8px] md:text-[9px] px-1.5 md:px-2 py-0.5 md:py-1 font-bold uppercase tracking-widest"
+                  className="text-[8px] md:text-[9px] px-1.5 py-0.5 font-medium uppercase tracking-widest"
                   style={{
-                    background: a === activeStep.action_taken ? (ACTION_BG[a] ?? 'rgba(255,255,255,0.1)') : 'transparent',
-                    color:      a === activeStep.action_taken ? (ACTION_FG[a] ?? '#FFFFFF') : '#4A4A4A',
-                    border:     `1px solid ${a === activeStep.action_taken ? (ACTION_FG[a] ?? '#FFFFFF') + '66' : '#2A2A2A'}`,
+                    color:  'var(--color-text-muted)',
+                    border: '1px solid var(--color-border)',
                   }}
                 >{a}</span>
               ))}
             </div>
-            <p className="text-[9px] md:text-[10px] text-[#848484] text-center leading-snug line-clamp-2">
+            {/* Reason text */}
+            <p className="text-[9px] md:text-[10px] text-center leading-snug line-clamp-2" style={{ color: 'var(--color-text-secondary)' }}>
               {activeStep.reason}
             </p>
-          </div>
+          </>
         ) : (
-          <div className="flex justify-center">
-            <span className="text-[10px] text-[#2A2A2A]">—</span>
+          <div className="flex justify-center" aria-hidden="true">
+            <span className="text-[10px]" style={{ color: 'var(--color-border)' }}>—</span>
           </div>
         )}
       </div>
-    </div>
+    </article>
   );
 }
-
-// Re-export for GameView usage
-export { ACTION_COLORS };

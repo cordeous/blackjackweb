@@ -107,9 +107,23 @@ export const ACTION_COLORS: Record<string, string> = {
   split:  '#7c3aed',
 };
 
+export const ACTION_BG: Record<string, string> = {
+  hit:    'var(--color-win-bg)',
+  stand:  'var(--color-loss-bg)',
+  double: 'var(--color-push-bg)',
+  split:  'rgba(124,58,237,0.15)',
+};
+
+export const ACTION_FG: Record<string, string> = {
+  hit:    'var(--color-win-fg)',
+  stand:  'var(--color-loss-fg)',
+  double: 'var(--color-push-fg)',
+  split:  '#c4b5fd',
+};
+
 export const SUIT_COLORS: Record<string, string> = {
-  '♥': '#dc2626',
-  '♦': '#dc2626',
-  '♣': '#1f2937',
-  '♠': '#1f2937',
+  '♥': 'var(--color-suit-red)',
+  '♦': 'var(--color-suit-red)',
+  '♣': 'var(--color-suit-black)',
+  '♠': 'var(--color-suit-black)',
 };

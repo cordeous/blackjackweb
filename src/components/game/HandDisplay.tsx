@@ -28,8 +28,8 @@ export function HandDisplay({ cards, small = false, highlight = false, showValue
         <div
           className="text-xs font-bold px-2 py-0.5 rounded-full"
           style={{
-            backgroundColor: isBust ? '#dc2626' : isBlackjack ? '#d4af37' : 'rgba(255,255,255,0.15)',
-            color: isBust ? 'white' : isBlackjack ? '#0c1a08' : 'white',
+            backgroundColor: isBust ? 'var(--color-loss)' : isBlackjack ? 'var(--color-card-gold)' : 'rgba(255,255,255,0.15)',
+            color: isBust ? 'var(--color-text-primary)' : isBlackjack ? 'var(--color-page)' : 'var(--color-text-primary)',
           }}
         >
           {isBust ? `${value} BUST` : isBlackjack ? `${value} BJ!` : value}

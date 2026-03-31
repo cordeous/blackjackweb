@@ -20,50 +20,56 @@ export function ReplayControls({ replay, controls, onLeaderboard, onMenu }: Prop
     : 0;
 
   return (
-    <div
+    <nav
       className="sticky bottom-0 z-10 flex flex-col gap-0"
-      style={{ background: '#0A0A0A', borderTop: '1px solid #2A2A2A' }}
+      style={{ background: 'var(--color-page)', borderTop: '1px solid var(--color-border)' }}
+      aria-label="Replay controls"
     >
       {/* Progress bar */}
-      <div className="w-full h-0.5" style={{ background: '#1A1A1A' }}>
+      <div className="w-full h-0.5" style={{ background: 'var(--color-border-sub)' }} role="presentation">
         <div
           className="h-full transition-all duration-300"
-          style={{ width: `${progress}%`, background: '#C9A962' }}
+          style={{ width: `${progress}%`, background: 'var(--color-gold)' }}
         />
       </div>
 
       {/* Controls row */}
-      <div className="flex items-center gap-1.5 md:gap-3 px-2 md:px-14 h-12 md:h-16 flex-wrap">
+      <div className="flex items-center gap-1.5 md:gap-3 px-2 md:px-14 h-14 md:h-16 flex-wrap">
 
         {/* Menu — hidden on xs, shown sm+ */}
         <button
           onClick={onMenu}
-          className="hidden sm:flex h-8 md:h-9 px-2 md:px-4 text-[10px] md:text-xs text-[#848484] hover:text-white transition cursor-pointer items-center"
-          style={{ border: '1px solid #2A2A2A' }}
+          aria-label="Back to menu"
+          className="hidden sm:flex min-h-[44px] md:h-9 px-2 md:px-4 text-[10px] md:text-xs transition cursor-pointer items-center"
+          style={{ border: '1px solid var(--color-border)', color: 'var(--color-text-secondary)' }}
         >← Menu</button>
 
-        <div className="hidden sm:block" style={{ width: '1px', height: '20px', background: '#2A2A2A' }} />
+        <div className="hidden sm:block" style={{ width: '1px', height: '20px', background: 'var(--color-border)' }} aria-hidden="true" />
 
         {/* Rewind */}
         <button
           onClick={() => { controls.pause(); controls.jumpTo(0); }}
-          className="w-8 h-8 md:w-9 md:h-9 flex items-center justify-center text-[#848484] hover:text-white transition cursor-pointer text-[10px] md:text-xs"
-          style={{ border: '1px solid #2A2A2A' }}
+          aria-label="Rewind to start"
+          className="w-11 h-11 md:w-9 md:h-9 flex items-center justify-center transition cursor-pointer text-[10px] md:text-xs"
+          style={{ border: '1px solid var(--color-border)', color: 'var(--color-text-secondary)' }}
         >◀◀</button>
 
         {/* Prev */}
         <button
           onClick={controls.prev}
           disabled={replay.eventIndex === 0}
-          className="w-8 h-8 md:w-9 md:h-9 flex items-center justify-center text-[#848484] hover:text-white disabled:opacity-30 transition cursor-pointer text-sm"
-          style={{ border: '1px solid #2A2A2A' }}
+          aria-label="Previous frame"
+          className="w-11 h-11 md:w-9 md:h-9 flex items-center justify-center disabled:opacity-30 transition cursor-pointer text-sm"
+          style={{ border: '1px solid var(--color-border)', color: 'var(--color-text-secondary)' }}
         >◀</button>
 
         {/* Play / Pause */}
         <button
           onClick={replay.isPlaying ? controls.pause : controls.play}
-          className="w-10 h-8 md:w-12 md:h-9 flex items-center justify-center text-sm md:text-base font-bold transition cursor-pointer"
-          style={{ background: '#C9A962', color: '#0A0A0A' }}
+          aria-label={replay.isPlaying ? 'Pause replay' : 'Play replay'}
+          aria-pressed={replay.isPlaying}
+          className="w-11 h-11 md:w-12 md:h-9 flex items-center justify-center text-sm md:text-base font-bold transition cursor-pointer"
+          style={{ background: 'var(--color-gold)', color: 'var(--color-page)' }}
         >
           {replay.isPlaying ? '⏸' : '▶'}
         </button>
@@ -72,49 +78,58 @@ export function ReplayControls({ replay, controls, onLeaderboard, onMenu }: Prop
         <button
           onClick={controls.next}
           disabled={replay.atEnd}
-          className="w-8 h-8 md:w-9 md:h-9 flex items-center justify-center text-[#848484] hover:text-white disabled:opacity-30 transition cursor-pointer text-sm"
-          style={{ border: '1px solid #2A2A2A' }}
+          aria-label="Next frame"
+          className="w-11 h-11 md:w-9 md:h-9 flex items-center justify-center disabled:opacity-30 transition cursor-pointer text-sm"
+          style={{ border: '1px solid var(--color-border)', color: 'var(--color-text-secondary)' }}
         >▶</button>
 
         {/* Jump to end */}
         <button
           onClick={controls.jumpToEnd}
-          className="w-8 h-8 md:w-9 md:h-9 flex items-center justify-center text-[#848484] hover:text-white transition cursor-pointer text-[10px] md:text-xs"
-          style={{ border: '1px solid #2A2A2A' }}
+          aria-label="Jump to end"
+          className="w-11 h-11 md:w-9 md:h-9 flex items-center justify-center transition cursor-pointer text-[10px] md:text-xs"
+          style={{ border: '1px solid var(--color-border)', color: 'var(--color-text-secondary)' }}
         >▶▶</button>
 
-        <div className="hidden sm:block" style={{ width: '1px', height: '20px', background: '#2A2A2A' }} />
+        <div className="hidden sm:block" style={{ width: '1px', height: '20px', background: 'var(--color-border)' }} aria-hidden="true" />
 
         {/* Speed buttons */}
-        <div className="flex gap-1">
+        <div className="flex gap-1" role="group" aria-label="Playback speed">
           {SPEEDS.map(s => (
             <button
               key={s.ms}
               onClick={() => controls.setSpeed(s.ms)}
-              className="h-7 md:h-8 px-1.5 md:px-3 text-[9px] md:text-xs transition cursor-pointer font-medium"
+              aria-label={`Set speed to ${s.label}`}
+              aria-pressed={replay.speed === s.ms}
+              className="h-9 px-1.5 md:px-3 text-[9px] md:text-xs transition cursor-pointer font-medium min-w-[44px] md:min-w-0"
               style={{
-                background: replay.speed === s.ms ? '#C9A962' : 'transparent',
-                color:      replay.speed === s.ms ? '#0A0A0A' : '#848484',
-                border:     `1px solid ${replay.speed === s.ms ? '#C9A962' : '#2A2A2A'}`,
+                background: replay.speed === s.ms ? 'var(--color-gold)' : 'transparent',
+                color:      replay.speed === s.ms ? 'var(--color-page)' : 'var(--color-text-secondary)',
+                border:     `1px solid ${replay.speed === s.ms ? 'var(--color-gold)' : 'var(--color-border)'}`,
               }}
             >{s.label}</button>
           ))}
         </div>
 
         {/* Frame counter — hidden on xs */}
-        <span className="hidden sm:inline text-[10px] md:text-xs text-[#4A4A4A]" style={{ fontFamily: 'JetBrains Mono, monospace' }}>
+        <span
+          className="hidden sm:inline text-[10px] md:text-xs"
+          style={{ color: 'var(--color-text-muted)', fontFamily: 'JetBrains Mono, monospace' }}
+          aria-label={`Frame ${replay.eventIndex + 1} of ${replay.totalEvents}`}
+        >
           {replay.eventIndex + 1}/{replay.totalEvents}
         </span>
 
         {/* Results button */}
         <button
           onClick={onLeaderboard}
-          className="ml-auto h-8 md:h-9 px-3 md:px-5 text-[10px] md:text-xs font-semibold transition cursor-pointer"
-          style={{ background: '#C9A962', color: '#0A0A0A' }}
+          aria-label="View final results"
+          className="ml-auto h-9 px-3 md:px-5 text-[10px] md:text-xs font-semibold transition cursor-pointer min-h-[44px] md:min-h-0"
+          style={{ background: 'var(--color-gold)', color: 'var(--color-page)' }}
         >
           Results →
         </button>
       </div>
-    </div>
+    </nav>
   );
 }

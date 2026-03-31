@@ -17,6 +17,8 @@ interface Props {
 }
 
 export function BankrollChart({ session }: Props) {
+  if (!session.rounds.length) return null;
+
   // Build data array: one entry per round, one key per agent
   const data = session.rounds.map(round => {
     const entry: Record<string, number | string> = { round: round.round_num };
@@ -33,15 +35,15 @@ export function BankrollChart({ session }: Props) {
     if (!active || !payload?.length) return null;
     return (
       <div
-        className="rounded-xl px-3 py-2 text-xs shadow-xl"
-        style={{ background: 'rgba(10,30,15,0.95)', border: '1px solid rgba(255,255,255,0.12)' }}
+        className="px-3 py-2 text-xs"
+        style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}
       >
-        <div className="text-green-400 mb-1 font-semibold">Round {label}</div>
+        <div className="mb-1 font-semibold" style={{ color: 'var(--color-gold)' }}>Round {label}</div>
         {payload.map((p: any) => (
           <div key={p.dataKey} className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full" style={{ background: p.color }} />
+            <div className="w-2 h-2 flex-shrink-0" style={{ background: p.color }} />
             <span style={{ color: p.color }}>{p.dataKey}:</span>
-            <span className="text-white font-mono">${p.value}</span>
+            <span className="text-white" style={{ fontFamily: 'JetBrains Mono, monospace' }}>${p.value}</span>
           </div>
         ))}
       </div>
@@ -51,34 +53,34 @@ export function BankrollChart({ session }: Props) {
   return (
     <ResponsiveContainer width="100%" height={260}>
       <LineChart data={data} margin={{ top: 8, right: 20, left: 0, bottom: 0 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+        <CartesianGrid strokeDasharray="3 3" stroke="rgba(42,42,42,0.8)" />
         <XAxis
           dataKey="round"
-          tick={{ fill: '#6b7280', fontSize: 11 }}
-          label={{ value: 'Round', position: 'insideBottom', fill: '#6b7280', fontSize: 11, dy: 10 }}
+          tick={{ fill: 'var(--color-text-secondary)', fontSize: 11 }}
+          label={{ value: 'Round', position: 'insideBottom', fill: 'var(--color-text-secondary)', fontSize: 11, dy: 10 }}
         />
         <YAxis
-          tick={{ fill: '#6b7280', fontSize: 11 }}
+          tick={{ fill: 'var(--color-text-secondary)', fontSize: 11 }}
           tickFormatter={(v) => `$${v}`}
           width={58}
         />
         <Tooltip content={customTooltip} />
         <Legend
-          wrapperStyle={{ fontSize: 11, paddingTop: 8, color: '#9ca3af' }}
-          formatter={(value) => <span style={{ color: AGENT_COLORS[value] ?? '#9ca3af' }}>{value}</span>}
+          wrapperStyle={{ fontSize: 11, paddingTop: 8, color: 'var(--color-text-secondary)' }}
+          formatter={(value) => <span style={{ color: AGENT_COLORS[value] ?? 'var(--color-text-secondary)' }}>{value}</span>}
         />
         <ReferenceLine
           y={session.starting_bankroll}
-          stroke="rgba(255,255,255,0.2)"
+          stroke="#2A2A2A"
           strokeDasharray="4 3"
-          label={{ value: 'Start', fill: '#6b7280', fontSize: 10, position: 'right' }}
+          label={{ value: 'Start', fill: 'var(--color-text-secondary)', fontSize: 10, position: 'right' }}
         />
         {agents.map((entry) => (
           <Line
             key={entry.name}
             type="monotone"
             dataKey={entry.name}
-            stroke={AGENT_COLORS[entry.name] ?? '#888'}
+            stroke={AGENT_COLORS[entry.name] ?? '#848484'}
             strokeWidth={2}
             dot={false}
             activeDot={{ r: 4 }}

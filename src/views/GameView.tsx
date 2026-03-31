@@ -5,33 +5,16 @@ import { useAutoPlay } from '../hooks/useAutoPlay';
 import { DealerPanel } from '../components/game/DealerPanel';
 import { AgentPanel } from '../components/game/AgentPanel';
 import { ReplayControls } from '../components/game/ReplayControls';
+import { AppHeader } from '../components/AppHeader';
 import type { AgentRoundStep } from '../types/session';
 
-const ACTION_BG: Record<string, string> = {
-  hit:    'rgba(22,163,74,0.15)',
-  stand:  'rgba(220,38,38,0.15)',
-  double: 'rgba(217,119,6,0.15)',
-  split:  'rgba(124,58,237,0.15)',
+/** Maps internal event kind keys to plain-English phase labels. */
+const PHASE_LABELS: Record<string, string> = {
+  round_start:   'Dealing Cards',
+  agent_step:    'Playing',
+  dealer_reveal: "Dealer's Turn",
+  round_end:     'Results',
 };
-const ACTION_FG: Record<string, string> = {
-  hit:    '#4ade80',
-  stand:  '#f87171',
-  double: '#fbbf24',
-  split:  '#c4b5fd',
-};
-
-function ActionBadge({ action }: { action: string }) {
-  return (
-    <span
-      className="text-[10px] md:text-xs font-bold uppercase px-2 py-0.5 md:px-2.5 md:py-1 tracking-widest flex-shrink-0"
-      style={{
-        background: ACTION_BG[action] ?? 'rgba(255,255,255,0.08)',
-        color:      ACTION_FG[action] ?? '#FFFFFF',
-        border:     `1px solid ${ACTION_FG[action] ?? '#FFFFFF'}44`,
-      }}
-    >{action}</span>
-  );
-}
 
 export function GameView() {
   const { state, dispatch } = useSession();
@@ -43,13 +26,30 @@ export function GameView() {
     controls.next();
   });
 
-  useEffect(() => {
-    if (replay.atEnd && !replay.isPlaying) { /* user sees final frame */ }
-  }, [replay.atEnd, replay.isPlaying]);
-
   const { currentEvent } = replay;
   const round = session.rounds[currentEvent.roundIndex];
-  const n     = round.agent_results.length;
+
+  useEffect(() => {
+    if (!round) return;
+    document.title = `Round ${round.round_num}/${session.rounds_played} — Blackjack AI`;
+  }, [round?.round_num, session.rounds_played]);
+
+  // Guard: if the session has no rounds, show a safe fallback
+  if (!round) {
+    return (
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{ background: 'var(--color-page)' }}
+        role="alert"
+      >
+        <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
+          No rounds available to display.
+        </p>
+      </div>
+    );
+  }
+
+  const n = round.agent_results.length;
 
   const agentHands: string[][] = useMemo(() => {
     return round.agent_results.map((ar, ai) => {
@@ -76,7 +76,7 @@ export function GameView() {
 
   const activeStep: AgentRoundStep | null =
     currentEvent.kind === 'agent_step'
-      ? round.agent_results[currentEvent.agentIndex!].steps[currentEvent.stepIndex!]
+      ? (round.agent_results[currentEvent.agentIndex!]?.steps[currentEvent.stepIndex!] ?? null)
       : null;
 
   const showPayouts    = currentEvent.kind === 'round_end';
@@ -97,56 +97,46 @@ export function GameView() {
     n === 4 ? 'grid-cols-2 md:grid-cols-4' :
               'grid-cols-2 sm:grid-cols-3 lg:grid-cols-5';
 
+  const phaseLabel = PHASE_LABELS[currentEvent.kind] ?? currentEvent.kind;
+
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: '#0A0A0A' }}>
+    <div className="min-h-screen flex flex-col" style={{ background: 'var(--color-page)' }}>
 
-      {/* ── Header ── */}
-      <header
-        className="flex items-center justify-between px-3 md:px-14 h-12 md:h-[72px] flex-shrink-0"
-        style={{ borderBottom: '1px solid #2A2A2A' }}
-      >
-        {/* Logo */}
-        <div className="flex items-center gap-2">
-          <div
-            className="w-7 h-7 md:w-9 md:h-9 flex items-center justify-center text-sm md:text-lg font-semibold flex-shrink-0"
-            style={{ border: '1px solid #C9A962', color: '#C9A962', fontFamily: 'Cormorant Garamond, serif' }}
-          >♠</div>
-          <span className="text-[10px] md:text-sm font-medium tracking-[2px] md:tracking-[3px] text-white hidden sm:block">
-            BLACKJACK AI
-          </span>
-        </div>
-
-        {/* Center — Round + Phase */}
-        <div className="flex items-center gap-3 md:gap-6">
-          <div className="flex flex-col items-center gap-0">
-            <span className="text-[9px] md:text-[10px] font-medium tracking-[1px] md:tracking-[2px] text-[#848484]">ROUND</span>
-            <span className="text-base md:text-xl font-medium text-white" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
-              {round.round_num} / {session.rounds_played}
-            </span>
+      <AppHeader
+        center={
+          <div className="flex items-center gap-3 md:gap-6" aria-live="polite" aria-atomic="true">
+            <div className="flex flex-col items-center">
+              <span className="text-[9px] md:text-[10px] font-medium tracking-[2px]" style={{ color: 'var(--color-text-secondary)' }}>ROUND</span>
+              <span className="text-base md:text-xl font-medium text-white" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
+                {round.round_num} / {session.rounds_played}
+              </span>
+            </div>
+            <div className="hidden sm:block" style={{ width: '1px', height: '28px', background: 'var(--color-border)' }} aria-hidden="true" />
+            <div className="hidden sm:flex flex-col items-center">
+              <span className="text-[9px] md:text-[10px] font-medium tracking-[2px]" style={{ color: 'var(--color-text-secondary)' }}>PHASE</span>
+              <span className="text-xs md:text-sm font-medium" style={{ color: 'var(--color-gold)' }}>
+                {phaseLabel}
+              </span>
+            </div>
           </div>
-          <div className="hidden sm:block" style={{ width: '1px', height: '28px', background: '#2A2A2A' }} />
-          <div className="hidden sm:flex flex-col items-center gap-0">
-            <span className="text-[9px] md:text-[10px] font-medium tracking-[1px] md:tracking-[2px] text-[#848484]">PHASE</span>
-            <span className="text-xs md:text-sm font-medium" style={{ color: '#C9A962' }}>
-              {currentEvent.kind.replace(/_/g, ' ')}
-            </span>
-          </div>
-        </div>
-
-        {/* Nav buttons */}
-        <div className="flex items-center gap-1.5 md:gap-2">
-          <button
-            onClick={() => dispatch({ type: 'GO_TO_MENU' })}
-            className="h-7 md:h-9 px-2 md:px-4 text-[10px] md:text-xs text-[#848484] hover:text-white transition cursor-pointer"
-            style={{ border: '1px solid #2A2A2A' }}
-          >Menu</button>
-          <button
-            onClick={() => dispatch({ type: 'GO_TO_LEADERBOARD' })}
-            className="h-7 md:h-9 px-2 md:px-4 text-[10px] md:text-xs font-medium cursor-pointer"
-            style={{ background: '#C9A962', color: '#0A0A0A' }}
-          >Results</button>
-        </div>
-      </header>
+        }
+        actions={
+          <>
+            <button
+              onClick={() => dispatch({ type: 'GO_TO_MENU' })}
+              aria-label="Back to menu"
+              className="h-7 md:h-9 px-2 md:px-4 text-[10px] md:text-xs transition cursor-pointer"
+              style={{ border: '1px solid var(--color-border)', color: 'var(--color-text-secondary)' }}
+            >Menu</button>
+            <button
+              onClick={() => dispatch({ type: 'GO_TO_LEADERBOARD' })}
+              aria-label="View results"
+              className="h-7 md:h-9 px-2 md:px-4 text-[10px] md:text-xs font-medium cursor-pointer"
+              style={{ background: 'var(--color-gold)', color: 'var(--color-page)' }}
+            >Results</button>
+          </>
+        }
+      />
 
       {/* ── Dealer ── */}
       <DealerPanel
@@ -156,7 +146,7 @@ export function GameView() {
       />
 
       {/* ── Agent panels grid ── */}
-      <div className={`flex-1 grid ${colClass} gap-px`} style={{ background: '#2A2A2A' }}>
+      <main id="main-content" className={`flex-1 grid ${colClass} gap-px`} style={{ background: 'var(--color-border)' }}>
         {round.agent_results.map((ar, i) => (
           <AgentPanel
             key={ar.agent_name + i}
@@ -170,23 +160,35 @@ export function GameView() {
             startingBankroll={session.starting_bankroll}
           />
         ))}
-      </div>
+      </main>
 
-      {/* ── Decision banner (hidden on very small screens, shown sm+) ── */}
-      {activeStep && (
-        <div
-          className="hidden sm:flex items-center gap-2 md:gap-4 px-3 md:px-14 h-10 md:h-14 text-xs md:text-sm slide-up flex-shrink-0"
-          style={{ background: '#0A0A0A', borderTop: '1px solid #1A1A1A' }}
-        >
-          <span className="font-semibold flex-shrink-0" style={{ color: '#C9A962' }}>{activeStep.agent_name}</span>
-          <span className="text-[#2A2A2A]">→</span>
-          <ActionBadge action={activeStep.action_taken} />
-          <span className="text-[#848484] text-[10px] md:text-xs truncate">{activeStep.reason}</span>
-          <span className="ml-auto text-[10px] md:text-xs text-[#4A4A4A] flex-shrink-0 hidden md:block">
-            Hand: {activeStep.hand_value} · Dealer: {activeStep.dealer_upcard}
-          </span>
-        </div>
-      )}
+      {/* ── Decision banner — shown sm+, always rendered for aria-live stability ── */}
+      <div
+        aria-live="polite"
+        aria-atomic="true"
+        aria-label="Current decision"
+        className="hidden sm:flex items-center gap-2 md:gap-4 px-3 md:px-14 flex-shrink-0"
+        style={{
+          minHeight: '48px',
+          background: 'var(--color-page)',
+          borderTop: '1px solid var(--color-border-sub)',
+        }}
+      >
+        {activeStep && (
+          <>
+            <span className="font-semibold text-xs md:text-sm flex-shrink-0" style={{ color: 'var(--color-gold)' }}>
+              {activeStep.agent_name}
+            </span>
+            <span style={{ color: 'var(--color-text-muted)' }} aria-hidden="true">→</span>
+            <span className="text-xs md:text-sm truncate flex-1" style={{ color: 'var(--color-text-secondary)' }}>
+              {activeStep.reason}
+            </span>
+            <span className="flex-shrink-0 hidden md:block text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
+              Hand: {activeStep.hand_value} · Dealer: {activeStep.dealer_upcard}
+            </span>
+          </>
+        )}
+      </div>
 
       {/* ── Replay Controls ── */}
       <ReplayControls
