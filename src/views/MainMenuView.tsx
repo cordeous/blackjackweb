@@ -4,12 +4,48 @@ import { runSession } from '../api/client';
 import { AppHeader } from '../components/AppHeader';
 import { AGENT_COLORS } from '../types/session';
 
+// ---------------------------------------------------------------------------
+// Agent metadata — personality tags that make selection feel meaningful
+// ---------------------------------------------------------------------------
+
 const ALL_AGENTS = [
-  { id: 'Random',                label: 'Random Agent',            desc: 'Selects actions randomly — baseline comparison'        },
-  { id: 'Heuristic(basic)',      label: 'Heuristic (Basic)',        desc: 'Rule-based basic strategy — optimal play'              },
-  { id: 'Heuristic(aggressive)', label: 'Heuristic (Aggressive)',   desc: 'Doubles and splits more often — high variance'         },
-  { id: 'MCTS',                  label: 'MCTS Agent',               desc: 'Monte Carlo Tree Search — statistical lookahead'       },
-  { id: 'DNN',                   label: 'DNN Agent',                desc: 'Deep Neural Network — trained on millions of hands'    },
+  {
+    id:          'Random',
+    label:       'Random',
+    tag:         'Chaos',
+    desc:        'Selects actions randomly — the baseline every agent must beat',
+    personality: 'Unpredictable by design. A reminder that luck alone won\'t cut it.',
+  },
+  {
+    id:          'Heuristic(basic)',
+    label:       'Heuristic',
+    tag:         'Optimal',
+    suffix:      'Basic',
+    desc:        'Rule-based basic strategy — statistically optimal play',
+    personality: 'The textbook answer. Plays every hand exactly as the math dictates.',
+  },
+  {
+    id:          'Heuristic(aggressive)',
+    label:       'Heuristic',
+    tag:         'High Variance',
+    suffix:      'Aggressive',
+    desc:        'Doubles and splits far more often — swings hard in both directions',
+    personality: 'Goes for the jugular. Bigger wins, bigger losses, never boring.',
+  },
+  {
+    id:          'MCTS',
+    label:       'MCTS',
+    tag:         'Analytical',
+    desc:        'Monte Carlo Tree Search — runs thousands of simulations per decision',
+    personality: 'Thinks ten moves ahead. Computationally expensive. Rarely surprised.',
+  },
+  {
+    id:          'DNN',
+    label:       'DNN',
+    tag:         'Learned',
+    desc:        'Deep Neural Network — trained on millions of hands',
+    personality: 'Doesn\'t follow rules. Learned patterns humans never articulated.',
+  },
 ];
 
 function Spinner() {
@@ -21,13 +57,22 @@ function Spinner() {
   );
 }
 
+// ---------------------------------------------------------------------------
+// Main view
+// ---------------------------------------------------------------------------
+
 export function MainMenuView() {
   const { state, dispatch } = useSession();
   const cfg = state.config;
   const [loading, setLoading] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const [hoveredAgent, setHoveredAgent] = useState<string | null>(null);
 
   useEffect(() => {
     document.title = 'Configure Tournament — Blackjack AI';
+    // Tiny delay so CSS transitions have something to animate from
+    const t = setTimeout(() => setMounted(true), 30);
+    return () => clearTimeout(t);
   }, []);
 
   const isSelected = (id: string) => cfg.agents.includes(id);
@@ -57,210 +102,385 @@ export function MainMenuView() {
     }
   }
 
-  const summaryText = `${cfg.agents.length} agent${cfg.agents.length !== 1 ? 's' : ''} · ${cfg.num_rounds} rounds · $${cfg.base_bet} bet · $${cfg.starting_bankroll.toLocaleString()}`;
-  const canRun = cfg.agents.length > 0 && !loading;
+  const selectedCount = cfg.agents.length;
+  const canRun = selectedCount > 0 && !loading;
+  const activeAgent = hoveredAgent
+    ? ALL_AGENTS.find(a => a.id === hoveredAgent)
+    : ALL_AGENTS.find(a => isSelected(a.id)) ?? null;
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: 'var(--color-page)' }}>
 
-      <AppHeader
-        actions={
-          <span className="text-[10px] md:text-xs hidden sm:block" style={{ color: 'var(--color-text-secondary)' }}>
-            Tournament Edition
-          </span>
-        }
-      />
-
-      {/* ── Hero ── */}
-      <div
-        className="flex flex-col items-center py-6 md:py-10 gap-1 md:gap-2 px-4 text-center"
-        style={{ borderBottom: '1px solid var(--color-border)' }}
-      >
-        <span className="text-[10px] md:text-xs font-medium tracking-[2px] md:tracking-[3px]" style={{ color: 'var(--color-text-secondary)' }}>
-          MULTI-AGENT COMPETITION
-        </span>
-        <h1
-          className="text-3xl md:text-5xl font-medium"
-          style={{ fontFamily: 'Cormorant Garamond, serif', color: 'var(--color-text-primary)' }}
-        >Configure Your Tournament</h1>
-        <p className="text-xs md:text-sm" style={{ color: 'var(--color-text-secondary)' }}>
-          Select agents, set stakes, and run the simulation
-        </p>
-      </div>
+      <AppHeader />
 
       {/* ── Error ── */}
       {state.error && (
         <div
           role="alert"
-          className="mx-4 md:mx-14 mt-4 px-4 py-3 text-xs md:text-sm slide-up"
+          className="mx-4 md:mx-14 mt-4 px-4 py-3 text-xs slide-up"
           style={{ border: '1px solid var(--color-loss)', background: 'var(--color-error-bg)', color: 'var(--color-loss-fg)' }}
         >⚠ {state.error}</div>
       )}
 
-      {/* ── Body: stacked on mobile, side-by-side on desktop ── */}
-      <main id="main-content" className="flex flex-col md:flex-row flex-1 pb-[80px] md:pb-[72px]">
+      {/* ── Main layout: roster left, config right ── */}
+      <main
+        id="main-content"
+        className="flex flex-col lg:flex-row flex-1 pb-[72px]"
+      >
+        {/* ════════════════════════════════════════
+            LEFT — Competitor roster
+        ════════════════════════════════════════ */}
+        <div className="flex flex-col flex-1 min-w-0 pt-8 md:pt-12 pb-4">
 
-        {/* ── Agent selection ── */}
-        <section
-          className="flex flex-col gap-4 md:gap-6 px-4 md:px-14 py-6 md:py-10 md:flex-1"
-          aria-label="Agent selection"
-        >
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl md:text-2xl font-medium" style={{ fontFamily: 'Cormorant Garamond, serif', color: 'var(--color-text-primary)' }}>
-              Select Agents
-            </h2>
-            <span className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>up to 5</span>
+          {/* Page title — editorial, left-aligned, no hero zone */}
+          <div className="px-6 md:px-14 mb-8 md:mb-10">
+            <p
+              className="text-[10px] font-medium tracking-[3px] mb-2"
+              style={{ color: 'var(--color-text-muted)' }}
+            >
+              SELECT COMPETITORS
+            </p>
+            <h1
+              className="text-4xl md:text-6xl lg:text-7xl font-medium leading-none"
+              style={{ fontFamily: 'Cormorant Garamond, serif', color: 'var(--color-text-primary)', letterSpacing: '-0.02em' }}
+            >
+              Build Your<br />
+              <span style={{ color: 'var(--color-gold)' }}>Lineup.</span>
+            </h1>
           </div>
 
-          <div className="flex flex-col gap-2 md:gap-3" role="group" aria-label="Available agents">
-            {ALL_AGENTS.map(agent => {
-              const sel = isSelected(agent.id);
+          {/* Roster — agents as competitors, not form fields */}
+          <div
+            role="group"
+            aria-label="Available agents"
+            className="flex flex-col"
+            style={{ borderTop: '1px solid var(--color-border)' }}
+          >
+            {ALL_AGENTS.map((agent, index) => {
+              const sel   = isSelected(agent.id);
               const color = AGENT_COLORS[agent.id] ?? 'var(--color-gold)';
+              const hov   = hoveredAgent === agent.id;
+
               return (
                 <button
                   key={agent.id}
                   onClick={() => toggleAgent(agent.id)}
+                  onMouseEnter={() => setHoveredAgent(agent.id)}
+                  onMouseLeave={() => setHoveredAgent(null)}
                   aria-pressed={sel}
-                  aria-label={`${agent.label}${sel ? ' — selected' : ''}`}
-                  className="flex items-center gap-3 md:gap-4 h-14 md:h-16 px-4 md:px-5 text-left transition-all cursor-pointer w-full"
+                  aria-label={`${agent.label}${agent.suffix ? ' ' + agent.suffix : ''}${sel ? ' — selected' : ''}`}
+                  className="relative flex items-center text-left cursor-pointer w-full group"
                   style={{
-                    border:     `1px solid ${sel ? color : 'var(--color-border)'}`,
-                    background: sel ? `${color}10` : 'transparent',
+                    borderBottom: '1px solid var(--color-border)',
+                    background: sel
+                      ? `${color}08`
+                      : hov ? 'var(--color-surface)' : 'transparent',
+                    transition: 'background 0.15s ease',
+                    transform:  mounted ? 'translateY(0)' : 'translateY(20px)',
+                    opacity:    mounted ? 1 : 0,
+                    transitionDelay: `${index * 55}ms`,
+                    transitionProperty: 'background, transform, opacity',
+                    transitionDuration: mounted ? '0.15s, 0.4s, 0.4s' : '0s',
+                    transitionTimingFunction: 'ease, cubic-bezier(0.16,1,0.3,1), cubic-bezier(0.16,1,0.3,1)',
                   }}
                 >
+                  {/* Thick left accent bar — always visible, communicates color identity */}
                   <div
-                    className="w-2 h-2 md:w-2.5 md:h-2.5 rounded-full flex-shrink-0 transition-colors"
-                    style={{ background: sel ? color : 'var(--color-border)' }}
+                    className="flex-shrink-0 self-stretch"
+                    style={{
+                      width: sel ? '4px' : '2px',
+                      background: sel ? color : hov ? color : 'var(--color-border)',
+                      transition: 'width 0.15s ease, background 0.15s ease',
+                    }}
                     aria-hidden="true"
                   />
-                  <div className="flex-1 min-w-0 text-left">
-                    <div className="text-sm font-medium truncate" style={{ color: sel ? color : 'var(--color-text-primary)' }}>
-                      {agent.label}
+
+                  {/* Content */}
+                  <div className="flex items-center gap-4 md:gap-6 px-5 md:px-8 py-4 md:py-5 flex-1 min-w-0">
+                    {/* Index number */}
+                    <span
+                      className="text-xl md:text-2xl font-medium flex-shrink-0 w-6 md:w-8 text-right select-none"
+                      style={{
+                        fontFamily: 'Cormorant Garamond, serif',
+                        color: sel ? color : 'var(--color-text-muted)',
+                        transition: 'color 0.15s ease',
+                      }}
+                      aria-hidden="true"
+                    >
+                      {index + 1}
+                    </span>
+
+                    {/* Name block */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-baseline gap-2 md:gap-3 flex-wrap">
+                        <span
+                          className="text-lg md:text-xl font-medium leading-none"
+                          style={{
+                            fontFamily: 'Cormorant Garamond, serif',
+                            color: sel ? color : 'var(--color-text-primary)',
+                            transition: 'color 0.15s ease',
+                          }}
+                        >
+                          {agent.label}
+                        </span>
+                        {agent.suffix && (
+                          <span
+                            className="text-xs font-medium tracking-[1px]"
+                            style={{ color: sel ? color : 'var(--color-text-secondary)', transition: 'color 0.15s ease' }}
+                          >
+                            {agent.suffix.toUpperCase()}
+                          </span>
+                        )}
+                        {/* Personality tag pill — always visible */}
+                        <span
+                          className="text-[9px] font-medium tracking-[1.5px] px-2 py-0.5 flex-shrink-0"
+                          style={{
+                            background: sel ? `${color}18` : 'transparent',
+                            border: `1px solid ${sel ? color + '60' : 'var(--color-border)'}`,
+                            color: sel ? color : 'var(--color-text-muted)',
+                            transition: 'all 0.15s ease',
+                          }}
+                          aria-hidden="true"
+                        >
+                          {agent.tag.toUpperCase()}
+                        </span>
+                      </div>
+                      {/* Description — only readable when hovered or selected */}
+                      <p
+                        className="text-xs mt-1 leading-snug"
+                        style={{
+                          color: 'var(--color-text-secondary)',
+                          maxWidth: '48ch',
+                          opacity: sel || hov ? 1 : 0.5,
+                          transition: 'opacity 0.15s ease',
+                        }}
+                      >
+                        {agent.desc}
+                      </p>
                     </div>
-                    <div className="text-[10px] md:text-xs mt-0.5 truncate" style={{ color: 'var(--color-text-secondary)' }}>
-                      {agent.desc}
+
+                    {/* Selection state — right side */}
+                    <div className="flex-shrink-0 flex items-center gap-3">
+                      {sel ? (
+                        <span
+                          className="text-xs font-semibold tracking-[1px] select-none"
+                          style={{ color }}
+                        >
+                          IN
+                        </span>
+                      ) : (
+                        <span
+                          className="text-xs tracking-[1px] select-none"
+                          style={{ color: 'var(--color-text-muted)' }}
+                        >
+                          ADD
+                        </span>
+                      )}
                     </div>
                   </div>
-                  {sel && (
-                    <div
-                      className="px-2 py-1 text-[9px] md:text-[10px] font-medium flex-shrink-0"
-                      style={{ border: '1px solid var(--color-gold-dim)', color: 'var(--color-gold)' }}
-                      aria-hidden="true"
-                    >✓</div>
-                  )}
                 </button>
               );
             })}
           </div>
-        </section>
 
-        {/* Divider */}
-        <div className="md:hidden mx-4" style={{ height: '1px', background: 'var(--color-border)' }} aria-hidden="true" />
-        <div className="hidden md:block flex-shrink-0" style={{ width: '1px', background: 'var(--color-border)' }} aria-hidden="true" />
-
-        {/* ── Settings ── */}
-        <section
-          className="flex flex-col px-4 md:px-10 py-6 md:py-10 md:w-[420px] lg:w-[480px] flex-shrink-0"
-          aria-label="Tournament settings"
-        >
-          <h2
-            className="text-xl md:text-2xl font-medium mb-6 md:mb-8"
-            style={{ fontFamily: 'Cormorant Garamond, serif', color: 'var(--color-text-primary)' }}
+          {/* Personality blurb — appears below roster, changes on hover/select */}
+          <div
+            className="hidden md:flex px-14 pt-5 pb-2 items-start gap-4"
+            style={{ minHeight: '48px' }}
+            aria-live="polite"
+            aria-atomic="true"
           >
-            Settings
-          </h2>
+            {activeAgent && (
+              <p
+                className="text-xs italic leading-relaxed slide-up"
+                style={{ color: 'var(--color-text-secondary)', maxWidth: '52ch' }}
+              >
+                "{activeAgent.personality}"
+              </p>
+            )}
+          </div>
+        </div>
 
-          <div className="flex flex-col divide-y" style={{ borderTop: '1px solid var(--color-border)', borderBottom: '1px solid var(--color-border)' }}>
-            <SettingRow
-              label="Rounds"
-              hint="Number of hands each agent plays"
-              value={cfg.num_rounds}
-              display={String(cfg.num_rounds)}
-              min={1} max={500} step={5}
-              onChange={v => setNum('num_rounds', v)}
-            />
-            <SettingRow
-              label="Base Bet"
-              hint="Wager placed at the start of each hand"
-              value={cfg.base_bet}
-              display={`$${cfg.base_bet}`}
-              min={1} max={500} step={5}
-              onChange={v => setNum('base_bet', v)}
-            />
-            <SettingRow
-              label="Starting Bankroll"
-              hint="Initial balance for each agent"
-              value={cfg.starting_bankroll}
-              display={`$${cfg.starting_bankroll.toLocaleString()}`}
-              min={100} max={10000} step={100}
-              onChange={v => setNum('starting_bankroll', v)}
-            />
-            <SettingRow
-              label="MCTS Simulations"
-              hint="Tree search depth — higher is slower but stronger"
-              value={cfg.mcts_sims}
-              display={String(cfg.mcts_sims)}
-              min={20} max={2000} step={20}
-              onChange={v => setNum('mcts_sims', v)}
-            />
+        {/* Vertical divider — desktop only */}
+        <div
+          className="hidden lg:block flex-shrink-0"
+          style={{ width: '1px', background: 'var(--color-border)' }}
+          aria-hidden="true"
+        />
+
+        {/* ════════════════════════════════════════
+            RIGHT — Config sidebar
+        ════════════════════════════════════════ */}
+        <div
+          className="flex flex-col lg:w-[360px] xl:w-[400px] flex-shrink-0 border-t lg:border-t-0"
+          style={{ borderColor: 'var(--color-border)' }}
+        >
+          {/* Lineup summary — shows who's in */}
+          <div
+            className="px-6 lg:px-8 pt-6 md:pt-8 pb-5"
+            style={{ borderBottom: '1px solid var(--color-border)' }}
+          >
+            <p className="text-[10px] font-medium tracking-[3px] mb-3" style={{ color: 'var(--color-text-muted)' }}>
+              LINEUP
+            </p>
+            {selectedCount === 0 ? (
+              <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
+                No agents selected
+              </p>
+            ) : (
+              <div className="flex flex-col gap-1.5">
+                {ALL_AGENTS.filter(a => isSelected(a.id)).map(a => {
+                  const color = AGENT_COLORS[a.id] ?? 'var(--color-gold)';
+                  return (
+                    <div key={a.id} className="flex items-center gap-2">
+                      <div
+                        className="flex-shrink-0"
+                        style={{ width: '3px', height: '14px', background: color }}
+                        aria-hidden="true"
+                      />
+                      <span className="text-sm font-medium" style={{ color: 'var(--color-text-primary)' }}>
+                        {a.label}{a.suffix ? ` ${a.suffix}` : ''}
+                      </span>
+                      <span className="text-[9px] tracking-[1px] ml-auto" style={{ color }}>
+                        {a.tag.toUpperCase()}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
-          {/* Scoring legend */}
-          <div className="mt-6 md:mt-8 flex items-start gap-3">
-            <span className="text-[9px] font-medium tracking-[2px] flex-shrink-0 mt-0.5" style={{ color: 'var(--color-text-muted)' }}>SCORING</span>
-            <div className="flex flex-wrap gap-x-4 gap-y-1">
+          {/* Settings */}
+          <div
+            className="flex flex-col px-6 lg:px-8 py-6"
+            style={{ borderBottom: '1px solid var(--color-border)' }}
+          >
+            <p className="text-[10px] font-medium tracking-[3px] mb-5" style={{ color: 'var(--color-text-muted)' }}>
+              PARAMETERS
+            </p>
+
+            <div className="flex flex-col gap-0" style={{ borderTop: '1px solid var(--color-border-sub)' }}>
+              <CompactSetting
+                label="Rounds"
+                value={cfg.num_rounds}
+                display={String(cfg.num_rounds)}
+                min={1} max={500} step={5}
+                onChange={v => setNum('num_rounds', v)}
+              />
+              <CompactSetting
+                label="Base Bet"
+                value={cfg.base_bet}
+                display={`$${cfg.base_bet}`}
+                min={1} max={500} step={5}
+                onChange={v => setNum('base_bet', v)}
+              />
+              <CompactSetting
+                label="Bankroll"
+                value={cfg.starting_bankroll}
+                display={`$${cfg.starting_bankroll.toLocaleString()}`}
+                min={100} max={10000} step={100}
+                onChange={v => setNum('starting_bankroll', v)}
+              />
+              <CompactSetting
+                label="MCTS Sims"
+                value={cfg.mcts_sims}
+                display={String(cfg.mcts_sims)}
+                min={20} max={2000} step={20}
+                onChange={v => setNum('mcts_sims', v)}
+              />
+            </div>
+          </div>
+
+          {/* Scoring — compact, readable */}
+          <div className="px-6 lg:px-8 py-5" style={{ borderBottom: '1px solid var(--color-border)' }}>
+            <p className="text-[10px] font-medium tracking-[3px] mb-3" style={{ color: 'var(--color-text-muted)' }}>
+              SCORING
+            </p>
+            <div className="grid grid-cols-2 gap-x-6 gap-y-1.5">
               {[
-                { label: 'Win',       value: '3 pts' },
-                { label: 'Tie / Push', value: '1 pt'  },
-                { label: 'Blackjack bonus', value: '+2 pts' },
-                { label: 'Loss',      value: '0 pts' },
-              ].map(({ label, value }) => (
-                <div key={label} className="flex items-baseline gap-1.5">
-                  <span className="text-[10px] md:text-xs font-medium" style={{ color: 'var(--color-text-primary)' }}>{value}</span>
-                  <span className="text-[9px] md:text-[10px]" style={{ color: 'var(--color-text-muted)' }}>{label}</span>
+                { outcome: 'Win',        pts: '3 pts',  color: 'var(--color-win-fg)'  },
+                { outcome: 'Blackjack',  pts: '+2 pts', color: 'var(--color-gold)'    },
+                { outcome: 'Push / Tie', pts: '1 pt',   color: 'var(--color-push-fg)' },
+                { outcome: 'Loss',       pts: '0 pts',  color: 'var(--color-text-muted)' },
+              ].map(({ outcome, pts, color }) => (
+                <div key={outcome} className="flex items-center justify-between gap-2">
+                  <span className="text-[10px]" style={{ color: 'var(--color-text-secondary)' }}>{outcome}</span>
+                  <span className="text-[10px] font-semibold" style={{ color }}>{pts}</span>
                 </div>
               ))}
             </div>
           </div>
-        </section>
+
+          {/* Spacer so the bottom button area doesn't crowd content on short screens */}
+          <div className="flex-1" />
+        </div>
       </main>
 
-      {/* ── Sticky Run footer ── */}
+      {/* ── Sticky bottom bar ── */}
       <div
-        className="fixed bottom-0 left-0 right-0 z-20 flex items-center gap-3 md:gap-6 px-4 md:px-14"
+        className="fixed bottom-0 left-0 right-0 z-20 flex items-center gap-4 px-4 md:px-8 lg:px-14"
         style={{
-          height: '72px',
+          height: '64px',
           background: 'var(--color-page)',
           borderTop: '1px solid var(--color-border)',
         }}
       >
-        {/* Summary */}
-        <div className="flex-1 min-w-0 hidden sm:block">
-          <div className="text-[10px] font-medium tracking-[2px]" style={{ color: 'var(--color-text-secondary)', marginBottom: '2px' }}>
-            TOURNAMENT SUMMARY
+        {/* Agent count indicator */}
+        <div className="flex items-center gap-3 flex-shrink-0">
+          <div className="flex gap-1" aria-hidden="true">
+            {ALL_AGENTS.map(a => {
+              const sel   = isSelected(a.id);
+              const color = AGENT_COLORS[a.id] ?? 'var(--color-gold)';
+              return (
+                <div
+                  key={a.id}
+                  style={{
+                    width:      sel ? '20px' : '6px',
+                    height:     '4px',
+                    background: sel ? color : 'var(--color-border)',
+                    transition: 'width 0.2s cubic-bezier(0.16,1,0.3,1), background 0.15s ease',
+                  }}
+                />
+              );
+            })}
           </div>
-          <div className="text-xs truncate" style={{ color: 'var(--color-text-primary)' }} aria-live="polite" aria-label="Tournament summary">
-            {summaryText}
-          </div>
+          <span className="text-xs hidden sm:block" style={{ color: 'var(--color-text-secondary)' }}>
+            {selectedCount === 0
+              ? 'No agents'
+              : `${selectedCount} of ${ALL_AGENTS.length}`}
+          </span>
         </div>
 
-        {/* Error / empty hint */}
-        {cfg.agents.length === 0 && (
+        {/* Rounds summary — compact */}
+        <div className="hidden md:flex items-center gap-1.5 text-xs flex-shrink-0" style={{ color: 'var(--color-text-muted)' }}>
+          <span style={{ color: 'var(--color-text-secondary)' }}>{cfg.num_rounds}</span> rounds ·
+          <span style={{ color: 'var(--color-text-secondary)' }}>${cfg.base_bet}</span> bet ·
+          <span style={{ color: 'var(--color-text-secondary)' }}>${cfg.starting_bankroll.toLocaleString()}</span>
+        </div>
+
+        {/* Validation nudge */}
+        {selectedCount === 0 && (
           <p className="text-[10px] flex-shrink-0" style={{ color: 'var(--color-loss-fg)' }} aria-live="polite" role="status">
-            Select an agent
+            Select at least one agent
           </p>
         )}
 
-        {/* Run button */}
+        {/* Run button — right-aligned */}
         <button
           onClick={handleStart}
           disabled={!canRun}
           aria-label={loading ? 'Simulating tournament, please wait' : 'Run tournament'}
           aria-busy={loading}
-          className="flex items-center justify-center gap-2 h-11 px-6 md:px-10 text-xs md:text-sm font-semibold tracking-[2px] transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer flex-shrink-0"
-          style={{ background: 'var(--color-gold)', color: 'var(--color-page)' }}
+          className="ml-auto flex items-center justify-center gap-2.5 h-10 px-7 md:px-10 text-xs font-semibold tracking-[2px] transition-all cursor-pointer flex-shrink-0 disabled:cursor-not-allowed"
+          style={{
+            background: canRun ? 'var(--color-gold)' : 'transparent',
+            color:      canRun ? 'var(--color-page)' : 'var(--color-text-muted)',
+            border:    canRun ? 'none' : '1px solid var(--color-border)',
+            transition: 'background 0.2s ease, color 0.2s ease, border 0.2s ease',
+          }}
         >
-          {loading ? <Spinner /> : <span aria-hidden="true">▶</span>}
+          {loading ? <Spinner /> : null}
           {loading ? 'SIMULATING…' : 'RUN TOURNAMENT'}
         </button>
       </div>
@@ -269,12 +489,11 @@ export function MainMenuView() {
 }
 
 // ---------------------------------------------------------------------------
-// SettingRow — full-width row with label, hint, value display, slider + steppers
+// CompactSetting — lean row: label left, value + steppers right, no slider
 // ---------------------------------------------------------------------------
 
-interface SettingRowProps {
+interface CompactSettingProps {
   label:    string;
-  hint:     string;
   value:    number;
   display:  string;
   min:      number;
@@ -283,101 +502,48 @@ interface SettingRowProps {
   onChange: (v: number) => void;
 }
 
-function SettingRow({ label, hint, value, display, min, max, step, onChange }: SettingRowProps) {
-  const id      = `setting-${label.toLowerCase().replace(/\s+/g, '-')}`;
-  const hintId  = `${id}-hint`;
-  const clamp   = (v: number) => Math.max(min, Math.min(max, v));
-  const pct     = ((value - min) / (max - min)) * 100;
-
-  function handleSlider(e: React.ChangeEvent<HTMLInputElement>) {
-    onChange(clamp(Number(e.target.value)));
-  }
+function CompactSetting({ label, value, display, min, max, step, onChange }: CompactSettingProps) {
+  const id    = `cs-${label.toLowerCase().replace(/\s+/g, '-')}`;
+  const clamp = (v: number) => Math.max(min, Math.min(max, v));
 
   return (
-    <div className="flex flex-col gap-3 py-4 md:py-5">
-      {/* Top row: label + value */}
-      <div className="flex items-baseline justify-between gap-4">
-        <div className="flex flex-col gap-0.5 min-w-0">
-          <label
-            htmlFor={id}
-            className="text-sm font-medium"
-            style={{ color: 'var(--color-text-primary)' }}
-          >
-            {label}
-          </label>
-          <span id={hintId} className="text-[10px] md:text-xs" style={{ color: 'var(--color-text-secondary)' }}>
-            {hint}
-          </span>
-        </div>
+    <div
+      className="flex items-center justify-between gap-4 py-3"
+      style={{ borderBottom: '1px solid var(--color-border-sub)' }}
+    >
+      <label
+        htmlFor={id}
+        className="text-xs font-medium select-none"
+        style={{ color: 'var(--color-text-secondary)' }}
+      >
+        {label}
+      </label>
 
-        {/* Value + steppers */}
-        <div className="flex items-center gap-0 flex-shrink-0" style={{ border: '1px solid var(--color-border)' }}>
-          <button
-            onClick={() => onChange(clamp(value - step))}
-            disabled={value <= min}
-            aria-label={`Decrease ${label}`}
-            className="w-9 h-9 flex items-center justify-center text-base font-medium transition cursor-pointer disabled:opacity-25 disabled:cursor-not-allowed flex-shrink-0"
-            style={{ borderRight: '1px solid var(--color-border)', color: 'var(--color-text-secondary)' }}
-          >−</button>
-          <span
-            className="w-20 text-center text-sm font-medium select-none"
-            style={{ color: 'var(--color-gold)' }}
-            aria-live="polite"
-            aria-label={`${label}: ${display}`}
-          >
-            {display}
-          </span>
-          <button
-            onClick={() => onChange(clamp(value + step))}
-            disabled={value >= max}
-            aria-label={`Increase ${label}`}
-            className="w-9 h-9 flex items-center justify-center text-base font-medium transition cursor-pointer disabled:opacity-25 disabled:cursor-not-allowed flex-shrink-0"
-            style={{ borderLeft: '1px solid var(--color-border)', color: 'var(--color-text-secondary)' }}
-          >+</button>
-        </div>
-      </div>
-
-      {/* Slider track */}
-      <div className="relative flex items-center" style={{ height: '20px' }}>
-        {/* Filled portion */}
-        <div
-          className="absolute left-0 top-1/2 -translate-y-1/2 h-px pointer-events-none"
-          style={{ width: `${pct}%`, background: 'var(--color-gold)' }}
-          aria-hidden="true"
-        />
-        {/* Unfilled portion */}
-        <div
-          className="absolute top-1/2 -translate-y-1/2 h-px pointer-events-none"
-          style={{ left: `${pct}%`, right: 0, background: 'var(--color-border)' }}
-          aria-hidden="true"
-        />
-        <input
+      <div className="flex items-center flex-shrink-0" style={{ border: '1px solid var(--color-border)' }}>
+        <button
+          onClick={() => onChange(clamp(value - step))}
+          disabled={value <= min}
+          aria-label={`Decrease ${label}`}
+          className="w-8 h-8 flex items-center justify-center text-sm font-medium cursor-pointer disabled:opacity-20 disabled:cursor-not-allowed transition-colors flex-shrink-0"
+          style={{ borderRight: '1px solid var(--color-border)', color: 'var(--color-text-secondary)' }}
+        >−</button>
+        <span
           id={id}
-          type="range"
-          min={min} max={max} step={step}
-          value={value}
-          onChange={handleSlider}
-          aria-describedby={hintId}
-          aria-valuemin={min}
-          aria-valuemax={max}
-          aria-valuenow={value}
-          aria-valuetext={display}
-          className="w-full cursor-pointer"
-          style={{
-            appearance: 'none',
-            WebkitAppearance: 'none',
-            background: 'transparent',
-            height: '20px',
-            position: 'relative',
-            zIndex: 1,
-          }}
-        />
-      </div>
-
-      {/* Range labels */}
-      <div className="flex justify-between">
-        <span className="text-[9px]" style={{ color: 'var(--color-text-muted)' }}>{min === 1 ? min : min.toLocaleString()}</span>
-        <span className="text-[9px]" style={{ color: 'var(--color-text-muted)' }}>{max.toLocaleString()}</span>
+          className="w-16 text-center text-xs font-semibold select-none"
+          style={{ color: 'var(--color-gold)' }}
+          aria-live="polite"
+          aria-label={`${label}: ${display}`}
+          role="status"
+        >
+          {display}
+        </span>
+        <button
+          onClick={() => onChange(clamp(value + step))}
+          disabled={value >= max}
+          aria-label={`Increase ${label}`}
+          className="w-8 h-8 flex items-center justify-center text-sm font-medium cursor-pointer disabled:opacity-20 disabled:cursor-not-allowed transition-colors flex-shrink-0"
+          style={{ borderLeft: '1px solid var(--color-border)', color: 'var(--color-text-secondary)' }}
+        >+</button>
       </div>
     </div>
   );

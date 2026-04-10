@@ -162,39 +162,6 @@ body {
   }
 }
 
-/* ── Range input — gold thumb, no track (we draw our own) ── */
-input[type="range"]::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  background: var(--color-gold);
-  border: 2px solid var(--color-page);
-  box-shadow: 0 0 0 1px var(--color-gold);
-  cursor: pointer;
-  margin-top: 0;
-}
-input[type="range"]::-moz-range-thumb {
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  background: var(--color-gold);
-  border: 2px solid var(--color-page);
-  box-shadow: 0 0 0 1px var(--color-gold);
-  cursor: pointer;
-}
-input[type="range"]::-webkit-slider-runnable-track { background: transparent; }
-input[type="range"]::-moz-range-track { background: transparent; }
-input[type="range"]:focus-visible {
-  outline: none;
-}
-input[type="range"]:focus-visible::-webkit-slider-thumb {
-  box-shadow: 0 0 0 3px var(--color-gold-dim);
-}
-input[type="range"]:focus-visible::-moz-range-thumb {
-  box-shadow: 0 0 0 3px var(--color-gold-dim);
-}
-
 /* Utility: visually hidden but accessible to screen readers */
 .sr-only {
   position: absolute;
