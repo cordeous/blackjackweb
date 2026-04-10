@@ -80,8 +80,8 @@ export function MainMenuView() {
           MULTI-AGENT COMPETITION
         </span>
         <h1
-          className="text-3xl md:text-5xl font-medium text-white"
-          style={{ fontFamily: 'Cormorant Garamond, serif' }}
+          className="text-3xl md:text-5xl font-medium"
+          style={{ fontFamily: 'Cormorant Garamond, serif', color: 'var(--color-text-primary)' }}
         >Configure Your Tournament</h1>
         <p className="text-xs md:text-sm" style={{ color: 'var(--color-text-secondary)' }}>
           Select agents, set stakes, and run the simulation
@@ -98,17 +98,15 @@ export function MainMenuView() {
       )}
 
       {/* ── Body: stacked on mobile, side-by-side on desktop ── */}
-      {/* pb-[80px] leaves room so the sticky footer never hides content */}
       <main id="main-content" className="flex flex-col md:flex-row flex-1 pb-[80px] md:pb-[72px]">
 
-        {/* Agent selection */}
+        {/* ── Agent selection ── */}
         <section
-          className="flex flex-col gap-4 md:gap-6 px-4 md:px-14 py-6 md:py-10"
-          style={{ width: '100%', maxWidth: '100%' }}
+          className="flex flex-col gap-4 md:gap-6 px-4 md:px-14 py-6 md:py-10 md:flex-1"
           aria-label="Agent selection"
         >
           <div className="flex items-center justify-between">
-            <h2 className="text-xl md:text-2xl font-medium text-white" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
+            <h2 className="text-xl md:text-2xl font-medium" style={{ fontFamily: 'Cormorant Garamond, serif', color: 'var(--color-text-primary)' }}>
               Select Agents
             </h2>
             <span className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>up to 5</span>
@@ -117,6 +115,7 @@ export function MainMenuView() {
           <div className="flex flex-col gap-2 md:gap-3" role="group" aria-label="Available agents">
             {ALL_AGENTS.map(agent => {
               const sel = isSelected(agent.id);
+              const color = AGENT_COLORS[agent.id] ?? 'var(--color-gold)';
               return (
                 <button
                   key={agent.id}
@@ -125,17 +124,17 @@ export function MainMenuView() {
                   aria-label={`${agent.label}${sel ? ' — selected' : ''}`}
                   className="flex items-center gap-3 md:gap-4 h-14 md:h-16 px-4 md:px-5 text-left transition-all cursor-pointer w-full"
                   style={{
-                    border:     `1px solid ${sel ? (AGENT_COLORS[agent.id] ?? 'var(--color-gold)') : 'var(--color-border)'}`,
-                    background: sel ? `${(AGENT_COLORS[agent.id] ?? 'var(--color-gold)')}10` : 'transparent',
+                    border:     `1px solid ${sel ? color : 'var(--color-border)'}`,
+                    background: sel ? `${color}10` : 'transparent',
                   }}
                 >
                   <div
-                    className="w-2 h-2 md:w-2.5 md:h-2.5 rounded-full flex-shrink-0"
-                    style={{ background: sel ? (AGENT_COLORS[agent.id] ?? 'var(--color-gold)') : 'var(--color-border)' }}
+                    className="w-2 h-2 md:w-2.5 md:h-2.5 rounded-full flex-shrink-0 transition-colors"
+                    style={{ background: sel ? color : 'var(--color-border)' }}
                     aria-hidden="true"
                   />
                   <div className="flex-1 min-w-0 text-left">
-                    <div className="text-sm font-medium truncate" style={{ color: sel ? (AGENT_COLORS[agent.id] ?? 'var(--color-gold)') : 'var(--color-text-primary)' }}>
+                    <div className="text-sm font-medium truncate" style={{ color: sel ? color : 'var(--color-text-primary)' }}>
                       {agent.label}
                     </div>
                     <div className="text-[10px] md:text-xs mt-0.5 truncate" style={{ color: 'var(--color-text-secondary)' }}>
@@ -159,26 +158,74 @@ export function MainMenuView() {
         <div className="md:hidden mx-4" style={{ height: '1px', background: 'var(--color-border)' }} aria-hidden="true" />
         <div className="hidden md:block flex-shrink-0" style={{ width: '1px', background: 'var(--color-border)' }} aria-hidden="true" />
 
-        {/* Settings */}
-        <section className="flex flex-col gap-5 md:gap-8 px-4 md:px-10 py-6 md:py-10 md:flex-1" aria-label="Tournament settings">
-          <h2 className="text-xl md:text-2xl font-medium text-white" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
+        {/* ── Settings ── */}
+        <section
+          className="flex flex-col px-4 md:px-10 py-6 md:py-10 md:w-[420px] lg:w-[480px] flex-shrink-0"
+          aria-label="Tournament settings"
+        >
+          <h2
+            className="text-xl md:text-2xl font-medium mb-6 md:mb-8"
+            style={{ fontFamily: 'Cormorant Garamond, serif', color: 'var(--color-text-primary)' }}
+          >
             Settings
           </h2>
 
-          <div className="grid grid-cols-2 gap-3 md:gap-5">
-            <NumField label="Rounds" displayLabel="ROUNDS" value={cfg.num_rounds}
-              min={1} max={500} step={5} onChange={v => setNum('num_rounds', v)} />
-            <NumField label="Base bet" displayLabel="BASE BET ($)" value={cfg.base_bet}
-              min={1} max={500} step={5} onChange={v => setNum('base_bet', v)} />
-            <NumField label="Bankroll" displayLabel="BANKROLL ($)" value={cfg.starting_bankroll}
-              min={100} max={10000} step={100} onChange={v => setNum('starting_bankroll', v)} />
-            <NumField label="MCTS simulations" displayLabel="MCTS SIMS" value={cfg.mcts_sims}
-              min={20} max={2000} step={20} onChange={v => setNum('mcts_sims', v)} />
+          <div className="flex flex-col divide-y" style={{ borderTop: '1px solid var(--color-border)', borderBottom: '1px solid var(--color-border)' }}>
+            <SettingRow
+              label="Rounds"
+              hint="Number of hands each agent plays"
+              value={cfg.num_rounds}
+              display={String(cfg.num_rounds)}
+              min={1} max={500} step={5}
+              onChange={v => setNum('num_rounds', v)}
+            />
+            <SettingRow
+              label="Base Bet"
+              hint="Wager placed at the start of each hand"
+              value={cfg.base_bet}
+              display={`$${cfg.base_bet}`}
+              min={1} max={500} step={5}
+              onChange={v => setNum('base_bet', v)}
+            />
+            <SettingRow
+              label="Starting Bankroll"
+              hint="Initial balance for each agent"
+              value={cfg.starting_bankroll}
+              display={`$${cfg.starting_bankroll.toLocaleString()}`}
+              min={100} max={10000} step={100}
+              onChange={v => setNum('starting_bankroll', v)}
+            />
+            <SettingRow
+              label="MCTS Simulations"
+              hint="Tree search depth — higher is slower but stronger"
+              value={cfg.mcts_sims}
+              display={String(cfg.mcts_sims)}
+              min={20} max={2000} step={20}
+              onChange={v => setNum('mcts_sims', v)}
+            />
+          </div>
+
+          {/* Scoring legend */}
+          <div className="mt-6 md:mt-8 flex items-start gap-3">
+            <span className="text-[9px] font-medium tracking-[2px] flex-shrink-0 mt-0.5" style={{ color: 'var(--color-text-muted)' }}>SCORING</span>
+            <div className="flex flex-wrap gap-x-4 gap-y-1">
+              {[
+                { label: 'Win',       value: '3 pts' },
+                { label: 'Tie / Push', value: '1 pt'  },
+                { label: 'Blackjack bonus', value: '+2 pts' },
+                { label: 'Loss',      value: '0 pts' },
+              ].map(({ label, value }) => (
+                <div key={label} className="flex items-baseline gap-1.5">
+                  <span className="text-[10px] md:text-xs font-medium" style={{ color: 'var(--color-text-primary)' }}>{value}</span>
+                  <span className="text-[9px] md:text-[10px]" style={{ color: 'var(--color-text-muted)' }}>{label}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </section>
       </main>
 
-      {/* ── Sticky Run footer — always visible ── */}
+      {/* ── Sticky Run footer ── */}
       <div
         className="fixed bottom-0 left-0 right-0 z-20 flex items-center gap-3 md:gap-6 px-4 md:px-14"
         style={{
@@ -189,24 +236,12 @@ export function MainMenuView() {
       >
         {/* Summary */}
         <div className="flex-1 min-w-0 hidden sm:block">
-          <div
-            className="text-[10px] font-medium tracking-[2px]"
-            style={{ color: 'var(--color-text-secondary)', marginBottom: '2px' }}
-          >
+          <div className="text-[10px] font-medium tracking-[2px]" style={{ color: 'var(--color-text-secondary)', marginBottom: '2px' }}>
             TOURNAMENT SUMMARY
           </div>
-          <div
-            className="text-xs text-white truncate"
-            aria-live="polite"
-            aria-label="Tournament summary"
-          >
+          <div className="text-xs truncate" style={{ color: 'var(--color-text-primary)' }} aria-live="polite" aria-label="Tournament summary">
             {summaryText}
           </div>
-        </div>
-
-        {/* Scoring hint */}
-        <div className="text-[9px] md:text-[10px] flex-shrink-0 hidden md:block" style={{ color: 'var(--color-text-muted)' }}>
-          Win 3 · Tie 1 · BJ +2
         </div>
 
         {/* Error / empty hint */}
@@ -234,75 +269,116 @@ export function MainMenuView() {
 }
 
 // ---------------------------------------------------------------------------
-// NumField
+// SettingRow — full-width row with label, hint, value display, slider + steppers
 // ---------------------------------------------------------------------------
 
-interface NumFieldProps {
-  label: string;
-  displayLabel: string;
-  value: number; min: number; max: number; step: number;
+interface SettingRowProps {
+  label:    string;
+  hint:     string;
+  value:    number;
+  display:  string;
+  min:      number;
+  max:      number;
+  step:     number;
   onChange: (v: number) => void;
 }
 
-function NumField({ label, displayLabel, value, min, max, step, onChange }: NumFieldProps) {
-  const id     = `numfield-${label.toLowerCase().replace(/\s+/g, '-')}`;
-  const hintId = `${id}-hint`;
-  const clamp  = (v: number) => Math.max(min, Math.min(max, v));
+function SettingRow({ label, hint, value, display, min, max, step, onChange }: SettingRowProps) {
+  const id      = `setting-${label.toLowerCase().replace(/\s+/g, '-')}`;
+  const hintId  = `${id}-hint`;
+  const clamp   = (v: number) => Math.max(min, Math.min(max, v));
+  const pct     = ((value - min) / (max - min)) * 100;
 
-  function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const raw = e.target.value;
-    if (raw === '' || raw === '-') return;
-    const n = Number(raw);
-    if (!Number.isFinite(n)) return;
-    onChange(clamp(n));
-  }
-
-  function handleBlur(e: React.FocusEvent<HTMLInputElement>) {
-    const n = Number(e.target.value);
-    if (!Number.isFinite(n) || e.target.value === '') {
-      onChange(value);
-    } else {
-      onChange(clamp(n));
-    }
+  function handleSlider(e: React.ChangeEvent<HTMLInputElement>) {
+    onChange(clamp(Number(e.target.value)));
   }
 
   return (
-    <div className="flex flex-col gap-1.5 md:gap-2">
-      <label
-        htmlFor={id}
-        className="text-[9px] md:text-[11px] font-medium tracking-[1px] md:tracking-[2px]"
-        style={{ color: 'var(--color-text-secondary)' }}
-      >
-        {displayLabel}
-      </label>
-      <div className="flex items-center h-10 md:h-12" style={{ border: '1px solid var(--color-border)' }}>
-        <button
-          onClick={() => onChange(clamp(value - step))}
-          disabled={value <= min}
-          aria-label={`Decrease ${label}`}
-          className="h-full px-2 md:px-4 transition text-sm font-medium cursor-pointer flex-shrink-0 min-w-[44px] disabled:opacity-30 disabled:cursor-not-allowed"
-          style={{ borderRight: '1px solid var(--color-border)', color: 'var(--color-text-secondary)' }}
-        >−</button>
+    <div className="flex flex-col gap-3 py-4 md:py-5">
+      {/* Top row: label + value */}
+      <div className="flex items-baseline justify-between gap-4">
+        <div className="flex flex-col gap-0.5 min-w-0">
+          <label
+            htmlFor={id}
+            className="text-sm font-medium"
+            style={{ color: 'var(--color-text-primary)' }}
+          >
+            {label}
+          </label>
+          <span id={hintId} className="text-[10px] md:text-xs" style={{ color: 'var(--color-text-secondary)' }}>
+            {hint}
+          </span>
+        </div>
+
+        {/* Value + steppers */}
+        <div className="flex items-center gap-0 flex-shrink-0" style={{ border: '1px solid var(--color-border)' }}>
+          <button
+            onClick={() => onChange(clamp(value - step))}
+            disabled={value <= min}
+            aria-label={`Decrease ${label}`}
+            className="w-9 h-9 flex items-center justify-center text-base font-medium transition cursor-pointer disabled:opacity-25 disabled:cursor-not-allowed flex-shrink-0"
+            style={{ borderRight: '1px solid var(--color-border)', color: 'var(--color-text-secondary)' }}
+          >−</button>
+          <span
+            className="w-20 text-center text-sm font-medium select-none"
+            style={{ color: 'var(--color-gold)' }}
+            aria-live="polite"
+            aria-label={`${label}: ${display}`}
+          >
+            {display}
+          </span>
+          <button
+            onClick={() => onChange(clamp(value + step))}
+            disabled={value >= max}
+            aria-label={`Increase ${label}`}
+            className="w-9 h-9 flex items-center justify-center text-base font-medium transition cursor-pointer disabled:opacity-25 disabled:cursor-not-allowed flex-shrink-0"
+            style={{ borderLeft: '1px solid var(--color-border)', color: 'var(--color-text-secondary)' }}
+          >+</button>
+        </div>
+      </div>
+
+      {/* Slider track */}
+      <div className="relative flex items-center" style={{ height: '20px' }}>
+        {/* Filled portion */}
+        <div
+          className="absolute left-0 top-1/2 -translate-y-1/2 h-px pointer-events-none"
+          style={{ width: `${pct}%`, background: 'var(--color-gold)' }}
+          aria-hidden="true"
+        />
+        {/* Unfilled portion */}
+        <div
+          className="absolute top-1/2 -translate-y-1/2 h-px pointer-events-none"
+          style={{ left: `${pct}%`, right: 0, background: 'var(--color-border)' }}
+          aria-hidden="true"
+        />
         <input
           id={id}
-          type="number"
-          value={value}
+          type="range"
           min={min} max={max} step={step}
-          inputMode="numeric"
-          onChange={handleInputChange}
-          onBlur={handleBlur}
+          value={value}
+          onChange={handleSlider}
           aria-describedby={hintId}
-          className="flex-1 bg-transparent text-center text-xs md:text-sm text-white focus:outline-none py-2 w-0"
+          aria-valuemin={min}
+          aria-valuemax={max}
+          aria-valuenow={value}
+          aria-valuetext={display}
+          className="w-full cursor-pointer"
+          style={{
+            appearance: 'none',
+            WebkitAppearance: 'none',
+            background: 'transparent',
+            height: '20px',
+            position: 'relative',
+            zIndex: 1,
+          }}
         />
-        <button
-          onClick={() => onChange(clamp(value + step))}
-          disabled={value >= max}
-          aria-label={`Increase ${label}`}
-          className="h-full px-2 md:px-4 transition text-sm font-medium cursor-pointer flex-shrink-0 min-w-[44px] disabled:opacity-30 disabled:cursor-not-allowed"
-          style={{ borderLeft: '1px solid var(--color-border)', color: 'var(--color-text-secondary)' }}
-        >+</button>
       </div>
-      <span id={hintId} className="sr-only">{min} to {max}</span>
+
+      {/* Range labels */}
+      <div className="flex justify-between">
+        <span className="text-[9px]" style={{ color: 'var(--color-text-muted)' }}>{min === 1 ? min : min.toLocaleString()}</span>
+        <span className="text-[9px]" style={{ color: 'var(--color-text-muted)' }}>{max.toLocaleString()}</span>
+      </div>
     </div>
   );
 }
