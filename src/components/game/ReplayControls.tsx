@@ -33,24 +33,27 @@ export function ReplayControls({ replay, controls, onLeaderboard, onMenu }: Prop
         />
       </div>
 
-      {/* Controls row */}
-      <div className="flex items-center gap-1.5 md:gap-3 px-2 md:px-14 h-14 md:h-16 flex-wrap">
+      {/* Controls row — no flex-wrap; hidden elements control overflow at each breakpoint */}
+      <div className="flex items-center gap-1.5 md:gap-3 px-2 md:px-14 h-14 md:h-16 overflow-hidden">
 
-        {/* Menu — hidden on xs, shown sm+ */}
+        {/* Menu — icon on xs, text on sm+ */}
         <button
           onClick={onMenu}
           aria-label="Back to menu"
-          className="hidden sm:flex min-h-[44px] md:h-9 px-2 md:px-4 text-[10px] md:text-xs transition cursor-pointer items-center"
+          className="flex items-center justify-center w-11 h-11 md:h-9 md:w-auto md:px-4 text-[10px] md:text-xs transition cursor-pointer flex-shrink-0"
           style={{ border: '1px solid var(--color-border)', color: 'var(--color-text-secondary)' }}
-        >← Menu</button>
+        >
+          <span className="md:hidden" aria-hidden="true">☰</span>
+          <span className="hidden md:inline">← Menu</span>
+        </button>
 
-        <div className="hidden sm:block" style={{ width: '1px', height: '20px', background: 'var(--color-border)' }} aria-hidden="true" />
+        <div className="hidden md:block flex-shrink-0" style={{ width: '1px', height: '20px', background: 'var(--color-border)' }} aria-hidden="true" />
 
         {/* Rewind */}
         <button
           onClick={() => { controls.pause(); controls.jumpTo(0); }}
           aria-label="Rewind to start"
-          className="w-11 h-11 md:w-9 md:h-9 flex items-center justify-center transition cursor-pointer text-[10px] md:text-xs"
+          className="w-11 h-11 md:w-9 md:h-9 flex items-center justify-center transition cursor-pointer text-[10px] md:text-xs flex-shrink-0"
           style={{ border: '1px solid var(--color-border)', color: 'var(--color-text-secondary)' }}
         >◀◀</button>
 
@@ -59,7 +62,7 @@ export function ReplayControls({ replay, controls, onLeaderboard, onMenu }: Prop
           onClick={controls.prev}
           disabled={replay.eventIndex === 0}
           aria-label="Previous frame"
-          className="w-11 h-11 md:w-9 md:h-9 flex items-center justify-center disabled:opacity-30 transition cursor-pointer text-sm"
+          className="w-11 h-11 md:w-9 md:h-9 flex items-center justify-center disabled:opacity-30 transition cursor-pointer text-sm flex-shrink-0"
           style={{ border: '1px solid var(--color-border)', color: 'var(--color-text-secondary)' }}
         >◀</button>
 
@@ -68,7 +71,7 @@ export function ReplayControls({ replay, controls, onLeaderboard, onMenu }: Prop
           onClick={replay.isPlaying ? controls.pause : controls.play}
           aria-label={replay.isPlaying ? 'Pause replay' : 'Play replay'}
           aria-pressed={replay.isPlaying}
-          className="w-11 h-11 md:w-12 md:h-9 flex items-center justify-center text-sm md:text-base font-bold transition cursor-pointer"
+          className="w-11 h-11 md:w-12 md:h-9 flex items-center justify-center text-sm md:text-base font-bold transition cursor-pointer flex-shrink-0"
           style={{ background: 'var(--color-gold)', color: 'var(--color-page)' }}
         >
           {replay.isPlaying ? '⏸' : '▶'}
@@ -79,7 +82,7 @@ export function ReplayControls({ replay, controls, onLeaderboard, onMenu }: Prop
           onClick={controls.next}
           disabled={replay.atEnd}
           aria-label="Next frame"
-          className="w-11 h-11 md:w-9 md:h-9 flex items-center justify-center disabled:opacity-30 transition cursor-pointer text-sm"
+          className="w-11 h-11 md:w-9 md:h-9 flex items-center justify-center disabled:opacity-30 transition cursor-pointer text-sm flex-shrink-0"
           style={{ border: '1px solid var(--color-border)', color: 'var(--color-text-secondary)' }}
         >▶</button>
 
@@ -87,21 +90,21 @@ export function ReplayControls({ replay, controls, onLeaderboard, onMenu }: Prop
         <button
           onClick={controls.jumpToEnd}
           aria-label="Jump to end"
-          className="w-11 h-11 md:w-9 md:h-9 flex items-center justify-center transition cursor-pointer text-[10px] md:text-xs"
+          className="w-11 h-11 md:w-9 md:h-9 flex items-center justify-center transition cursor-pointer text-[10px] md:text-xs flex-shrink-0"
           style={{ border: '1px solid var(--color-border)', color: 'var(--color-text-secondary)' }}
         >▶▶</button>
 
-        <div className="hidden sm:block" style={{ width: '1px', height: '20px', background: 'var(--color-border)' }} aria-hidden="true" />
+        <div className="hidden md:block flex-shrink-0" style={{ width: '1px', height: '20px', background: 'var(--color-border)' }} aria-hidden="true" />
 
-        {/* Speed buttons */}
-        <div className="flex gap-1" role="group" aria-label="Playback speed">
+        {/* Speed buttons — h-11 on mobile (44px), h-9 on desktop (36px) */}
+        <div className="flex gap-1 flex-shrink-0" role="group" aria-label="Playback speed">
           {SPEEDS.map(s => (
             <button
               key={s.ms}
               onClick={() => controls.setSpeed(s.ms)}
               aria-label={`Set speed to ${s.label}`}
               aria-pressed={replay.speed === s.ms}
-              className="h-9 px-1.5 md:px-3 text-[9px] md:text-xs transition cursor-pointer font-medium min-w-[44px] md:min-w-0"
+              className="h-11 md:h-9 px-1.5 md:px-3 text-[9px] md:text-xs transition cursor-pointer font-medium min-w-[44px] md:min-w-0 flex-shrink-0"
               style={{
                 background: replay.speed === s.ms ? 'var(--color-gold)' : 'transparent',
                 color:      replay.speed === s.ms ? 'var(--color-page)' : 'var(--color-text-secondary)',
@@ -111,20 +114,20 @@ export function ReplayControls({ replay, controls, onLeaderboard, onMenu }: Prop
           ))}
         </div>
 
-        {/* Frame counter — hidden on xs */}
+        {/* Frame counter — hidden on xs and sm, shown md+ only to avoid overflow */}
         <span
-          className="hidden sm:inline text-[10px] md:text-xs"
+          className="hidden md:inline text-xs flex-shrink-0"
           style={{ color: 'var(--color-text-muted)', fontFamily: 'JetBrains Mono, monospace' }}
           aria-label={`Frame ${replay.eventIndex + 1} of ${replay.totalEvents}`}
         >
           {replay.eventIndex + 1}/{replay.totalEvents}
         </span>
 
-        {/* Results button */}
+        {/* Results button — pushed to end */}
         <button
           onClick={onLeaderboard}
           aria-label="View final results"
-          className="ml-auto h-9 px-3 md:px-5 text-[10px] md:text-xs font-semibold transition cursor-pointer min-h-[44px] md:min-h-0"
+          className="ml-auto h-11 md:h-9 px-3 md:px-5 text-[10px] md:text-xs font-semibold transition cursor-pointer flex-shrink-0"
           style={{ background: 'var(--color-gold)', color: 'var(--color-page)' }}
         >
           Results →

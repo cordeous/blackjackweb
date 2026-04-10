@@ -4,13 +4,22 @@
   --color-gold:         #C9A962;
   --color-gold-dim:     rgba(201,169,98,0.4);
   --color-gold-bg:      rgba(201,169,98,0.06);
-  --color-page:         #0A0A0A;
-  --color-surface:      #141414;
-  --color-border:       #2A2A2A;
-  --color-border-sub:   #1A1A1A;
-  --color-text-primary: #FFFFFF;
-  --color-text-secondary: #848484;
-  --color-text-muted:   #4A4A4A;
+
+  /* Warm-tinted page and surface — no pure black/white */
+  --color-page:         #0C0A07;
+  --color-surface:      #161310;
+  --color-border:       #2A2620;
+  --color-border-sub:   #1C1814;
+
+  /* Warm off-white text */
+  --color-text-primary:   #F5F0E8;
+  --color-text-secondary: #877E6E;
+  --color-text-muted:     #4A4540;
+
+  /* Transparent overlays — tokenised */
+  --color-white-a15: rgba(245,240,232,0.15);
+  --color-white-a08: rgba(245,240,232,0.08);
+  --color-black-a30: rgba(0,0,0,0.3);
 
   --color-action-hit:    #16a34a;
   --color-action-stand:  #dc2626;
@@ -35,7 +44,7 @@
   --color-error-bg: rgba(220,38,38,0.08);
 
   /* Card face colors */
-  --color-card-face:      #f8f8eb;
+  --color-card-face:      #f8f4eb;
   --color-card-highlight: #fef3c7;
   --color-card-gold:      #d4af37;
   --color-card-border:    #cccccc;
@@ -51,7 +60,7 @@
   --color-suit-black: #1f2937;
 
   /* Table — subtly darker than --color-page, used for table headers */
-  --color-table-header: #0D0D0D;
+  --color-table-header: #0A0804;
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -59,21 +68,25 @@
 body {
   margin: 0;
   min-height: 100vh;
-  background-color: #0A0A0A;
-  color: #FFFFFF;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: var(--color-page);
+  color: var(--color-text-primary);
+  /* DM Sans — refined grotesque, pairs beautifully with Cormorant Garamond */
+  font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
   /* Prevent iOS from auto-enlarging text on landscape orientation */
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
   /* Improve text rendering on all platforms */
   -moz-osx-font-smoothing: grayscale;
+  /* Tabular nums as default so financial figures align without monospace */
+  font-variant-numeric: tabular-nums;
 }
 
 #root { min-height: 100vh; }
 
 /* Typography */
 .font-serif { font-family: 'Cormorant Garamond', serif; }
+/* Reserve JetBrains Mono for genuine code-like data: card sequences, frame counters */
 .font-mono  { font-family: 'JetBrains Mono', monospace; }
 
 /* ── Card flip ── */
@@ -97,12 +110,20 @@ body {
 }
 .fade-in { animation: fade-in 0.4s ease-out; }
 
-/* ── Active agent glow ── */
-@keyframes glow-pulse {
-  0%, 100% { box-shadow: 0 0 0 1px var(--glow-color, #C9A962); }
-  50%       { box-shadow: 0 0 0 2px var(--glow-color, #C9A962), 0 0 12px var(--glow-color, #C9A962); }
+/* ── Active agent glow — GPU-composited opacity pulse on a pseudo-element overlay ── */
+@keyframes active-pulse {
+  0%, 100% { opacity: 0.12; }
+  50%       { opacity: 0.28; }
 }
-.glow-pulse { animation: glow-pulse 1.2s ease-in-out infinite; }
+.active-pulse::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--pulse-color, var(--color-gold));
+  pointer-events: none;
+  animation: active-pulse 1.4s ease-in-out infinite;
+  will-change: opacity;
+}
 
 /* ── Leaderboard slide ── */
 @keyframes lb-slide {
@@ -115,14 +136,14 @@ body {
 
 /* Scrollbar — WebKit */
 ::-webkit-scrollbar { width: 4px; }
-::-webkit-scrollbar-track { background: #141414; }
-::-webkit-scrollbar-thumb { background: #2A2A2A; }
+::-webkit-scrollbar-track { background: var(--color-surface); }
+::-webkit-scrollbar-thumb { background: var(--color-border); }
 /* Scrollbar — Firefox */
-* { scrollbar-color: #2A2A2A #141414; scrollbar-width: thin; }
+* { scrollbar-color: var(--color-border) var(--color-surface); scrollbar-width: thin; }
 
 /* Focus-visible: gold ring on all interactive elements */
 :focus-visible {
-  outline: 2px solid #C9A962;
+  outline: 2px solid var(--color-gold);
   outline-offset: 2px;
 }
 
@@ -140,10 +161,6 @@ body {
     scroll-behavior: auto !important;
   }
 }
-
-/* Border helpers */
-.border-gold { border-color: #C9A962; }
-.border-dim  { border-color: #2A2A2A; }
 
 /* Utility: visually hidden but accessible to screen readers */
 .sr-only {

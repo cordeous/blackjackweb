@@ -1,12 +1,12 @@
 import { CardDisplay } from './CardDisplay';
 
 interface Props {
-  cards:      string[];
-  small?:     boolean;
-  highlight?: boolean;
-  showValue?: boolean;
-  value?:     number;
-  isBust?:    boolean;
+  cards:        string[];
+  small?:       boolean;
+  highlight?:   boolean;
+  showValue?:   boolean;
+  value?:       number;
+  isBust?:      boolean;
   isBlackjack?: boolean;
 }
 
@@ -26,9 +26,9 @@ export function HandDisplay({ cards, small = false, highlight = false, showValue
       </div>
       {showValue && value !== undefined && (
         <div
-          className="text-xs font-bold px-2 py-0.5 rounded-full"
+          className="text-xs font-bold px-2 py-0.5 rounded-full select-none"
           style={{
-            backgroundColor: isBust ? 'var(--color-loss)' : isBlackjack ? 'var(--color-card-gold)' : 'rgba(255,255,255,0.15)',
+            backgroundColor: isBust ? 'var(--color-loss)' : isBlackjack ? 'var(--color-card-gold)' : 'var(--color-white-a15)',
             color: isBust ? 'var(--color-text-primary)' : isBlackjack ? 'var(--color-page)' : 'var(--color-text-primary)',
           }}
         >

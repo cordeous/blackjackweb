@@ -53,7 +53,7 @@ export function BankrollChart({ session }: Props) {
   return (
     <ResponsiveContainer width="100%" height={260}>
       <LineChart data={data} margin={{ top: 8, right: 20, left: 0, bottom: 0 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="rgba(42,42,42,0.8)" />
+        <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
         <XAxis
           dataKey="round"
           tick={{ fill: 'var(--color-text-secondary)', fontSize: 11 }}

@@ -1,6 +1,7 @@
 import type { AgentRoundStep } from '../../types/session';
 import { AGENT_COLORS, ACTION_BG, ACTION_FG } from '../../types/session';
 import { HandDisplay } from './HandDisplay';
+import { handValue, isBlackjack } from '../../lib/blackjack';
 
 interface Props {
   name:             string;
@@ -11,22 +12,6 @@ interface Props {
   activeStep:       AgentRoundStep | null;
   payout:           number | null;
   startingBankroll: number;
-}
-
-function handValue(cards: string[]): number {
-  let total = 0, aces = 0;
-  for (const c of cards) {
-    const rank = c.slice(0, -1);
-    if (rank === 'A') { total += 11; aces++; }
-    else if (['J','Q','K'].includes(rank)) total += 10;
-    else total += parseInt(rank, 10) || 0;
-  }
-  while (total > 21 && aces > 0) { total -= 10; aces--; }
-  return total;
-}
-
-function isBlackjack(cards: string[]): boolean {
-  return cards.length === 2 && handValue(cards) === 21;
 }
 
 export function AgentPanel({ name, currentHand, bankroll, bet, isActive, activeStep, payout, startingBankroll }: Props) {
@@ -49,15 +34,21 @@ export function AgentPanel({ name, currentHand, bankroll, bet, isActive, activeS
       className="flex flex-col overflow-hidden"
       aria-label={`${name}${isActive ? ' — active' : ''}`}
       style={{
-        // Active: thick full-color border, brighter background
-        // Inactive: dimmed down so the active one reads as focal point
+        /* Active: coloured border + tinted background.
+           GPU-composited opacity pulse is applied via .active-pulse::after pseudo-element
+           (defined in index.css) — no box-shadow animation, no layout thrashing. */
         border:     isActive ? `2px solid ${color}` : '1px solid var(--color-border)',
         background: isActive ? `${color}12` : 'var(--color-page)',
         opacity:    isActive ? 1 : 0.72,
         transition: 'opacity 0.25s ease, border-color 0.25s ease, background 0.25s ease',
-        boxShadow:  isActive ? `0 0 0 1px ${color}55, inset 0 0 24px ${color}0a` : 'none',
+        position:   'relative',
+        /* CSS custom property consumed by .active-pulse::after in index.css */
+        ['--pulse-color' as string]: color,
       }}
     >
+      {/* GPU-composited opacity pulse overlay — only mounted when active */}
+      {isActive && <div className="active-pulse" style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }} aria-hidden="true" />}
+
       {/* Agent name strip */}
       <div
         className="flex items-center justify-between px-2 md:px-4 py-2 md:py-3 flex-shrink-0"
@@ -75,11 +66,11 @@ export function AgentPanel({ name, currentHand, bankroll, bet, isActive, activeS
         <div className="flex flex-col items-end flex-shrink-0">
           <span
             className="text-xs md:text-sm font-medium"
-            style={{ fontFamily: 'JetBrains Mono, monospace', color: 'var(--color-gold)' }}
+            style={{ color: 'var(--color-gold)' }}
           >${bankroll.toFixed(0)}</span>
           <span
             className="text-[9px] md:text-[10px]"
-            style={{ color: profit >= 0 ? 'var(--color-gold)' : 'var(--color-loss-fg)', fontFamily: 'JetBrains Mono, monospace' }}
+            style={{ color: profit >= 0 ? 'var(--color-gold)' : 'var(--color-loss-fg)' }}
           >{profit >= 0 ? '+' : ''}{profit.toFixed(0)}</span>
         </div>
       </div>
@@ -100,7 +91,7 @@ export function AgentPanel({ name, currentHand, bankroll, bet, isActive, activeS
           <span className="text-[10px] md:text-xs" style={{ color: 'var(--color-text-muted)' }}>Waiting…</span>
         )}
         <div className="text-[9px] md:text-[10px]" style={{ color: 'var(--color-text-secondary)' }}>
-          Bet <span className="text-white" style={{ fontFamily: 'JetBrains Mono, monospace' }}>${bet}</span>
+          Bet <span className="text-white">${bet}</span>
         </div>
       </div>
 
@@ -113,7 +104,7 @@ export function AgentPanel({ name, currentHand, bankroll, bet, isActive, activeS
       >
         {payout !== null ? (
           <div
-            className="flex items-center justify-center h-9 md:h-10 text-xs md:text-sm font-bold tracking-widest slide-up"
+            className="flex items-center justify-center h-9 md:h-10 text-xs md:text-sm font-bold tracking-widest slide-up select-none"
             style={{
               background: payout > 0 ? 'var(--color-win-bg)' : payout < 0 ? 'var(--color-loss-bg)' : 'var(--color-push-bg)',
               border:     `1px solid ${payout > 0 ? 'var(--color-win-fg)' : payout < 0 ? 'var(--color-loss-fg)' : 'var(--color-push-fg)'}`,
@@ -127,9 +118,9 @@ export function AgentPanel({ name, currentHand, bankroll, bet, isActive, activeS
             {/* Large action badge — the primary signal of what the agent is doing */}
             <div className="flex justify-center">
               <span
-                className="text-xs md:text-sm font-bold uppercase tracking-widest px-3 py-1 slide-up"
+                className="text-xs md:text-sm font-bold uppercase tracking-widest px-3 py-1 slide-up select-none"
                 style={{
-                  background: ACTION_BG[activeStep.action_taken] ?? 'rgba(255,255,255,0.08)',
+                  background: ACTION_BG[activeStep.action_taken] ?? 'var(--color-white-a08)',
                   color:      ACTION_FG[activeStep.action_taken] ?? 'var(--color-text-primary)',
                   border:     `1px solid ${ACTION_FG[activeStep.action_taken] ?? 'var(--color-border)'}`,
                 }}
@@ -142,7 +133,7 @@ export function AgentPanel({ name, currentHand, bankroll, bet, isActive, activeS
               {activeStep.legal_actions.filter(a => a !== activeStep.action_taken).map(a => (
                 <span
                   key={a}
-                  className="text-[8px] md:text-[9px] px-1.5 py-0.5 font-medium uppercase tracking-widest"
+                  className="text-[8px] md:text-[9px] px-1.5 py-0.5 font-medium uppercase tracking-widest select-none"
                   style={{
                     color:  'var(--color-text-muted)',
                     border: '1px solid var(--color-border)',

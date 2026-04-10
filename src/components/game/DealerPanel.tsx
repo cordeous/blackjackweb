@@ -1,21 +1,10 @@
 import { CardDisplay } from './CardDisplay';
+import { handValue } from '../../lib/blackjack';
 
 interface Props {
   upcard:   string;
   fullHand: string[];
   revealed: boolean;
-}
-
-function handValue(cards: string[]): number {
-  let total = 0, aces = 0;
-  for (const card of cards) {
-    const rank = card.slice(0, -1);
-    if (rank === 'A') { total += 11; aces++; }
-    else if (['J', 'Q', 'K'].includes(rank)) total += 10;
-    else total += parseInt(rank, 10) || 0;
-  }
-  while (total > 21 && aces > 0) { total -= 10; aces--; }
-  return total;
 }
 
 export function DealerPanel({ upcard, fullHand, revealed }: Props) {
@@ -64,7 +53,7 @@ export function DealerPanel({ upcard, fullHand, revealed }: Props) {
         </div>
       ) : (
         <span className="text-xs md:text-sm" style={{ color: 'var(--color-text-secondary)' }} aria-hidden="true">
-          Showing: <span className="text-white">{upcard}</span>
+          Showing: <span style={{ color: 'var(--color-text-primary)' }}>{upcard}</span>
         </span>
       )}
     </section>

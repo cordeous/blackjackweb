@@ -1,4 +1,5 @@
 import { SUIT_COLORS } from '../../types/session';
+import { cardAriaLabel } from '../../lib/blackjack';
 
 interface Props {
   card:        string;     // e.g. "A♠", "10♥"
@@ -6,15 +7,6 @@ interface Props {
   small?:      boolean;
   highlight?:  boolean;
   animDelay?:  number;     // ms delay for flip animation
-}
-
-function parseCard(card: string): { rank: string; symbol: string } {
-  const last = card.slice(-1);
-  const suitSymbols = ['♥', '♦', '♣', '♠'];
-  if (suitSymbols.includes(last)) {
-    return { rank: card.slice(0, -1), symbol: last };
-  }
-  return { rank: card, symbol: '' };
 }
 
 /** CSS cross-hatch SVG used as a card back pattern — works on all platforms. */
@@ -45,21 +37,26 @@ export function CardDisplay({ card, faceDown = false, small = false, highlight =
     );
   }
 
-  const { rank, symbol } = parseCard(card);
+  const label = cardAriaLabel(card);
+  const last = card.slice(-1);
+  const suitSymbols = ['♥', '♦', '♣', '♠'];
+  const hasSuit = suitSymbols.includes(last);
+  const rank   = hasSuit ? card.slice(0, -1) : card;
+  const symbol = hasSuit ? last : '';
   const suitColor = SUIT_COLORS[symbol] ?? 'var(--color-suit-black)';
   const isRed = symbol === '♥' || symbol === '♦';
 
   return (
     <div
       role="img"
-      aria-label={`${rank}${symbol}`}
+      aria-label={label}
       className={`${w} rounded-md flex-shrink-0 card-flip select-none`}
       style={{
         background: highlight ? 'var(--color-card-highlight)' : 'var(--color-card-face)',
         border: highlight ? '1.5px solid var(--color-card-gold)' : '1px solid var(--color-card-border)',
         boxShadow: highlight
-          ? '0 0 0 2px var(--color-gold-dim), 0 2px 6px rgba(0,0,0,0.3)'
-          : '0 2px 6px rgba(0,0,0,0.3)',
+          ? '0 0 0 2px var(--color-gold-dim), 0 2px 6px var(--color-black-a30)'
+          : '0 2px 6px var(--color-black-a30)',
         animationDelay: `${animDelay}ms`,
         color: suitColor,
         display: 'flex',

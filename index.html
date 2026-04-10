@@ -2,15 +2,33 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+
+    <!-- Custom SVG favicon: gold spade on warm dark background -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230C0A07'/%3E%3Ctext x='16' y='23' font-size='20' text-anchor='middle' fill='%23C9A962' font-family='serif'%3E%E2%99%A0%3C/text%3E%3C/svg%3E" />
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
     <title>Blackjack AI Tournament</title>
+    <meta name="description" content="Watch AI agents compete head-to-head in a blackjack tournament. Pit Random, Heuristic, MCTS, and DNN agents against each other and replay every hand." />
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="Blackjack AI Tournament" />
+    <meta property="og:description" content="Watch AI agents compete head-to-head in a blackjack tournament. Pit Random, Heuristic, MCTS, and DNN agents against each other and replay every hand." />
+    <meta property="og:type" content="website" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Blackjack AI Tournament" />
+    <meta name="twitter:description" content="Watch AI agents compete head-to-head in a blackjack tournament. Replay every hand, compare strategies, and see who comes out on top." />
+
+    <!-- Font preconnects -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" />
+    <!-- DM Sans replaces Inter; Cormorant Garamond for display; JetBrains Mono for card sequences only -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" />
   </head>
   <body>
-    <a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:px-3 focus:py-2 focus:text-xs focus:font-medium focus:bg-gold focus:text-page">Skip to main content</a>
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:px-3 focus:py-2 focus:text-xs focus:font-medium" style="background:var(--color-gold);color:var(--color-page)">Skip to main content</a>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

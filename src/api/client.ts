@@ -74,7 +74,7 @@ export async function runSession(config: RunConfig): Promise<SessionResult> {
       try {
         const text = await r.text();
         const parsed = JSON.parse(text);
-        msg = parsed.detail ?? parsed.message ?? text || msg;
+        msg = parsed.detail ?? parsed.message ?? (text || msg);
       } catch {
         // keep status-code message
       }

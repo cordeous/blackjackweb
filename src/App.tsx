@@ -23,7 +23,7 @@ function LoadingView() {
           className="w-9 h-9 flex items-center justify-center text-lg font-semibold"
           style={{ border: '1px solid var(--color-gold)', color: 'var(--color-gold)', fontFamily: 'Cormorant Garamond, serif' }}
         >♠</div>
-        <span className="text-sm font-medium tracking-[3px] text-white hidden sm:block">BLACKJACK AI</span>
+        <span className="text-sm font-medium tracking-[3px] hidden sm:block" style={{ color: 'var(--color-text-primary)' }}>BLACKJACK AI</span>
       </div>
 
       {/* Center stage */}
@@ -40,8 +40,8 @@ function LoadingView() {
         {/* Primary message */}
         <div className="flex flex-col items-center gap-2">
           <h1
-            className="text-3xl md:text-4xl font-medium text-white"
-            style={{ fontFamily: 'Cormorant Garamond, serif' }}
+            className="text-3xl md:text-4xl font-medium"
+            style={{ fontFamily: 'Cormorant Garamond, serif', color: 'var(--color-text-primary)' }}
           >
             Dealing the Tournament
           </h1>
@@ -72,21 +72,31 @@ class ErrorBoundary extends React.Component<
   { error: Error | null }
 > {
   state = { error: null };
+  private alertRef = React.createRef<HTMLDivElement>();
 
   static getDerivedStateFromError(error: Error) {
     return { error };
+  }
+
+  componentDidUpdate(_: unknown, prevState: { error: Error | null }) {
+    // Move focus to the alert container when an error first appears
+    if (!prevState.error && this.state.error && this.alertRef.current) {
+      this.alertRef.current.focus();
+    }
   }
 
   render() {
     if (this.state.error) {
       return (
         <div
+          ref={this.alertRef}
+          tabIndex={-1}
           className="min-h-screen flex flex-col items-center justify-center gap-4 px-6 text-center"
           role="alert"
-          style={{ background: 'var(--color-page)' }}
+          style={{ background: 'var(--color-page)', outline: 'none' }}
         >
           <div className="text-4xl" aria-hidden="true" style={{ color: 'var(--color-loss)' }}>⚠</div>
-          <h1 className="text-lg font-semibold text-white">Something went wrong</h1>
+          <h1 className="text-lg font-semibold" style={{ color: 'var(--color-text-primary)' }}>Something went wrong</h1>
           <p className="text-sm max-w-sm" style={{ color: 'var(--color-text-secondary)' }}>
             An unexpected error occurred. Reload the page to start over.
           </p>

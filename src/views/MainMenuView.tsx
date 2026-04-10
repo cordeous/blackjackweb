@@ -99,7 +99,7 @@ export function MainMenuView() {
 
       {/* ── Body: stacked on mobile, side-by-side on desktop ── */}
       {/* pb-[80px] leaves room so the sticky footer never hides content */}
-      <div className="flex flex-col md:flex-row flex-1 pb-[80px] md:pb-[72px]">
+      <main id="main-content" className="flex flex-col md:flex-row flex-1 pb-[80px] md:pb-[72px]">
 
         {/* Agent selection */}
         <section
@@ -176,7 +176,7 @@ export function MainMenuView() {
               min={20} max={2000} step={20} onChange={v => setNum('mcts_sims', v)} />
           </div>
         </section>
-      </div>
+      </main>
 
       {/* ── Sticky Run footer — always visible ── */}
       <div
@@ -291,7 +291,6 @@ function NumField({ label, displayLabel, value, min, max, step, onChange }: NumF
           inputMode="numeric"
           onChange={handleInputChange}
           onBlur={handleBlur}
-          aria-label={label}
           aria-describedby={hintId}
           className="flex-1 bg-transparent text-center text-xs md:text-sm text-white focus:outline-none py-2 w-0"
         />
